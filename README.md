@@ -45,10 +45,13 @@ beschriebenen Kern-Prototyp:
 8. ✅ Automatisierte Tests (51 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
    Medical-Data-Firewall-Zugriffskontrolle, MFA-Erzwingung, Journal-Bilanz,
    Wasserzeichen-Nachweis, Backup/Verschlüsselung/Aufräumen)
-9. ⚠️ Diese Anleitung, Testzugänge, Datenmodellübersicht, offene Punkte (unten)
-10. ⚠️ Webspace-Deploymentpaket: Migrationen/Seeder sind produktionsreif; ein
-    fertig gepacktes ZIP mit `vendor/` ist nicht Teil dieses Commits (siehe
-    „Deployment auf PHP-Webspace" unten für die nötigen Schritte)
+9. ✅ Diese Anleitung, Testzugänge, Datenmodellübersicht, offene Punkte (unten)
+10. ✅ Schritt-für-Schritt-Deployment-Anleitung für PHP-Webspace inkl.
+    Subdomain-Verknüpfung, FileZilla-Upload, Datenbank-Einrichtung und
+    Cronjob, siehe `DEPLOYMENT.md`. Das produktionsfertige ZIP mit `vendor/`
+    und gebauten Frontend-Assets wird bei Bedarf separat bereitgestellt
+    (nicht Teil des Git-Repositories, da es kompilierte Abhängigkeiten
+    enthält)
 
 Nicht bzw. nur ansatzweise umgesetzt (siehe „Offene Punkte"): vollständige
 feldbezogene Berechtigungen unterhalb der Rollenebene, Cap-Table-Modul,
@@ -205,6 +208,10 @@ php artisan test
   Archive auf, die älter als `--keep-days` sind
 
 ## Deployment auf PHP-Webspace (Abschnitt 22)
+
+Ausführliche Schritt-für-Schritt-Anleitung inkl. Subdomain-Verknüpfung,
+FileZilla-Upload, Datenbank-Einrichtung, `.env`-Konfiguration, Cronjob und
+Funktionsprüfung: siehe **`DEPLOYMENT.md`**. Kurzfassung:
 
 1. Auf einem Rechner mit Internetzugang: `composer install --no-dev
    --optimize-autoloader` und `npm run build` ausführen, damit `vendor/` und
