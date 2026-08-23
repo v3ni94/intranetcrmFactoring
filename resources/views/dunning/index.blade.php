@@ -36,9 +36,15 @@
                     <td class="p-3 capitalize">{{ $c->case_type }}</td>
                     <td class="p-3 text-right">{{ eur($c->open_amount) }}</td>
                     <td class="p-3 capitalize">{{ str_replace('_',' ', $c->status) }}</td>
-                    <td class="p-3 text-right">
+                    <td class="p-3 text-right space-x-2">
+                        @if(!in_array($c->status, ['geschlossen', 'inkasso']))
+                        <form method="POST" action="{{ route('dunning.hand-over', $c) }}" class="inline">
+                            @csrf
+                            <button class="text-aurevia-navy hover:underline">An Inkasso übergeben (Demo)</button>
+                        </form>
+                        @endif
                         @if($c->status !== 'geschlossen')
-                        <form method="POST" action="{{ route('dunning.close', $c) }}">
+                        <form method="POST" action="{{ route('dunning.close', $c) }}" class="inline">
                             @csrf
                             <button class="text-aurevia-navy hover:underline">Schließen</button>
                         </form>

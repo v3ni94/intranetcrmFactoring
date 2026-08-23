@@ -12,6 +12,11 @@
             <p class="text-sm text-aurevia-label-gray mb-3">Alle Buchungszeilen mit Konto, Soll und Haben.</p>
             <a href="{{ route('reports.journal') }}" class="text-sm text-white bg-aurevia-navy px-3 py-1.5 rounded-md hover:bg-aurevia-navy/90">CSV exportieren</a>
         </div>
+        <div class="bg-white rounded-lg border border-aurevia-mist p-6">
+            <h2 class="text-sm font-semibold text-aurevia-navy mb-2">DATEV-Buchungsstapel (Demo)</h2>
+            <p class="text-sm text-aurevia-label-gray mb-3">Sachkonten-Mapping als CSV, Adapter statt Festverdrahtung (Abschnitt 20).</p>
+            <a href="{{ route('reports.datev') }}" class="text-sm text-white bg-aurevia-navy px-3 py-1.5 rounded-md hover:bg-aurevia-navy/90">CSV exportieren</a>
+        </div>
     </div>
 
     <p class="text-[11px] text-aurevia-label-gray mt-6">

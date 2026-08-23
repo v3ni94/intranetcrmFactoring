@@ -17,6 +17,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DunningController;
 use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\GovernanceController;
+use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PaymentController;
@@ -124,6 +125,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/debitoren', [OrganizationController::class, 'debtors'])->name('debtors.index');
         Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding.index');
 
+        // Provider-Adapter-Aktionen (Abschnitt 20), aufgerufen von der Kundendetailseite
+        Route::post('/kunden/{organization}/kyc-pruefung', [OrganizationController::class, 'runKyc'])->name('organizations.run-kyc');
+        Route::post('/kunden/{organization}/bonitaetspruefung', [OrganizationController::class, 'runCreditCheck'])->name('organizations.run-credit-check');
+        Route::post('/kunden/{organization}/registerabgleich', [OrganizationController::class, 'runRegisterCheck'])->name('organizations.run-register-check');
+        Route::post('/wirtschaftlich-berechtigte/{owner}/pep-screening', [OrganizationController::class, 'runPepScreening'])->name('organizations.run-pep-screening');
+        Route::post('/vertraege/{contract}/signieren', [OrganizationController::class, 'signContract'])->name('organizations.sign-contract');
+        Route::post('/mahnwesen/{case}/inkasso-uebergabe', [DunningController::class, 'handOverToCollections'])->name('dunning.hand-over');
+        Route::get('/reporting/datev.csv', [ReportController::class, 'exportDatev'])->name('reports.datev');
+
         // Kreditlinien & Limits
         Route::prefix('kreditlinien')->name('credit-lines.')->group(function () {
             Route::get('/', [CreditLineController::class, 'index'])->name('index');
@@ -162,6 +172,10 @@ Route::middleware(['auth'])->group(function () {
     // Projekt, Annahmen & Beschlüsse (nur Geschaeftsleitung/Superadmin)
     Route::middleware('role:geschaeftsleitung|superadmin_demo')
         ->get('/projekt', [GovernanceController::class, 'index'])->name('governance.index');
+
+    // Integrationen & Schnittstellen-Status (Abschnitt 20)
+    Route::middleware('role:systemadministration|geschaeftsleitung|superadmin_demo')
+        ->get('/einstellungen/integrationen', [IntegrationController::class, 'index'])->name('integrations.index');
 
     // Demo-Steuerung (nur Superadmin)
     Route::middleware('role:superadmin_demo')->prefix('demo')->name('demo.')->group(function () {

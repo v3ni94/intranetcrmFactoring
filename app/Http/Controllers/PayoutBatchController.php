@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BankAccount;
 use App\Models\PayoutBatch;
 use App\Models\Purchase;
+use App\Services\Integrations\BankFileAdapter;
 use App\Services\JournalService;
 use App\Services\SepaExportService;
 use App\Support\AuditLogger;
@@ -70,7 +71,7 @@ class PayoutBatchController extends Controller
         return back()->with('status', 'Erste Freigabe erteilt.');
     }
 
-    public function approveSecond(Request $request, PayoutBatch $batch, SepaExportService $sepa)
+    public function approveSecond(Request $request, PayoutBatch $batch, SepaExportService $sepa, BankFileAdapter $bankAdapter)
     {
         abort_unless($batch->status === 'freigegeben_1', 422, 'Batch benötigt zunächst eine erste Freigabe.');
         abort_if($batch->approved_by_first === $request->user()->id, 403, 'Vier-Augen-Prinzip: Zweitfreigabe durch eine andere Person erforderlich.');
@@ -88,6 +89,7 @@ class PayoutBatchController extends Controller
         $batch->payouts->each(fn ($p) => $p->purchase->receivable->update(['status' => 'zahlung_angewiesen']));
 
         AuditLogger::log('approve', PayoutBatch::class, $batch->id, [], ['status' => $batch->status, 'sepa' => $reference]);
+        $bankAdapter->logSepaExport($batch, $reference);
 
         return back()->with('status', "Zweite Freigabe erteilt. SEPA-Demo-Datei erzeugt: {$reference}");
     }

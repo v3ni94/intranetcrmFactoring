@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\JournalLine;
 use App\Models\Receivable;
+use App\Services\Integrations\DatevExportAdapter;
 use App\Support\AuditLogger;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -36,6 +37,14 @@ class ReportController extends Controller
                 $l->account_code.' '.$l->account_name, number_format((float) $l->debit_amount, 2, ',', '.'), number_format((float) $l->credit_amount, 2, ',', '.'),
             ]);
         });
+    }
+
+    public function exportDatev(DatevExportAdapter $adapter): StreamedResponse
+    {
+        $export = $adapter->exportBookings();
+        AuditLogger::log('export', JournalLine::class, null, [], [], 'DATEV-Demo-Export');
+
+        return $this->csv('datev_buchungsstapel_demo.csv', $export['header'], fn () => $export['rows']);
     }
 
     private function csv(string $filename, array $header, callable $rows): StreamedResponse

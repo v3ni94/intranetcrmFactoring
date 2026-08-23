@@ -28,6 +28,7 @@ class NavigationMenu
             ['label' => 'Risiko & Compliance', 'route' => 'risk.index', 'roles' => ['kredit_risiko', 'compliance', 'geschaeftsleitung', 'superadmin_demo']],
             ['label' => 'Reporting', 'route' => 'reports.index', 'roles' => ['geschaeftsleitung', 'treasury_finance', 'superadmin_demo']],
             ['label' => 'Audit & Freigaben', 'route' => 'audit.index', 'roles' => ['compliance', 'geschaeftsleitung', 'systemadministration', 'superadmin_demo']],
+            ['label' => 'Integrationen', 'route' => 'integrations.index', 'roles' => ['systemadministration', 'geschaeftsleitung', 'superadmin_demo']],
             ['label' => 'Projekt & Beschlüsse', 'route' => 'governance.index', 'roles' => ['geschaeftsleitung', 'superadmin_demo']],
             ['label' => 'Demo-Steuerung', 'route' => 'demo.index', 'roles' => ['superadmin_demo']],
             ['label' => 'Einstellungen', 'route' => 'profile.edit', 'roles' => null],

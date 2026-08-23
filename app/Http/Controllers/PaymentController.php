@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BankAccount;
 use App\Models\BankTransaction;
 use App\Models\Receivable;
+use App\Services\Integrations\BankFileAdapter;
 use App\Services\JournalService;
 use App\Services\PaymentMatcher;
 use App\Support\AuditLogger;
@@ -27,7 +28,7 @@ class PaymentController extends Controller
         return view('payments.index', compact('openTransactions', 'matched'));
     }
 
-    public function importDemo(Request $request, PaymentMatcher $matcher)
+    public function importDemo(Request $request, PaymentMatcher $matcher, BankFileAdapter $bankAdapter)
     {
         $account = BankAccount::where('purpose', 'betrieb')->first() ?? BankAccount::first();
         abort_unless($account, 422, 'Kein Bankkonto vorhanden.');
@@ -40,6 +41,7 @@ class PaymentController extends Controller
 
         $created = $matcher->generateDemoStatement($account->id, $receivables);
         AuditLogger::log('import', BankTransaction::class, null, [], ['count' => count($created)], 'camt.053 Demo-Import');
+        $bankAdapter->logStatementImport(count($created));
 
         return back()->with('status', count($created).' Kontobewegung(en) importiert (camt.053-Demo).');
     }

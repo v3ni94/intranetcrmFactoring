@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DunningCase;
 use App\Models\Receivable;
+use App\Services\Integrations\CollectionsAdapter;
 use App\Support\AuditLogger;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
@@ -58,5 +59,13 @@ class DunningController extends Controller
         AuditLogger::log('update', DunningCase::class, $case->id, [], ['status' => 'geschlossen']);
 
         return back()->with('status', 'Fall geschlossen.');
+    }
+
+    public function handOverToCollections(DunningCase $case, CollectionsAdapter $adapter)
+    {
+        $reference = $adapter->handOver($case);
+        AuditLogger::log('update', DunningCase::class, $case->id, [], ['status' => 'inkasso'], 'Übergabe an Inkasso-Partner (Demo)');
+
+        return back()->with('status', "An Inkasso-Partner übergeben (Demo), Referenz {$reference}.");
     }
 }

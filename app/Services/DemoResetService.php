@@ -18,6 +18,8 @@ use App\Models\Facility;
 use App\Models\FacilityEvent;
 use App\Models\FactoringProduct;
 use App\Models\FinancialScenario;
+use App\Models\IntegrationEvent;
+use App\Models\IntegrationProvider;
 use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\KycCase;
@@ -45,6 +47,7 @@ class DemoResetService
 {
     /** Reihenfolge beachtet Fremdschluessel: Kinder vor Eltern. */
     private const MODELS_IN_DELETE_ORDER = [
+        IntegrationEvent::class, IntegrationProvider::class,
         Payment::class, BankTransaction::class, Payout::class, PayoutBatch::class,
         JournalLine::class, JournalEntry::class, DunningCase::class, Purchase::class,
         Receivable::class, CreditLine::class, DebtorLimit::class, KycCase::class,
