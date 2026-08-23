@@ -36,8 +36,11 @@ beschriebenen Kern-Prototyp:
     Einrichtungszwang, echte Challenge beim Login, Wiederherstellungscodes
 7e. ✅ Cap-Table-Modul, Related-Party- und Auslagerungsregister (Abschnitt 14.1/19),
     streng geschützt auf Geschäftsleitung/Superadmin
-8. ✅ Automatisierte Tests (46 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
-   Medical-Data-Firewall-Zugriffskontrolle, MFA-Erzwingung, Journal-Bilanz)
+7f. ✅ Automatisches Wasserzeichen (Status, Version, Empfänger) beim Download
+    sensibler PDF-Dokumente (Abschnitt 14), echte Stempelung mit FPDI/TCPDF
+8. ✅ Automatisierte Tests (48 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
+   Medical-Data-Firewall-Zugriffskontrolle, MFA-Erzwingung, Journal-Bilanz,
+   Wasserzeichen-Nachweis)
 9. ⚠️ Diese Anleitung, Testzugänge, Datenmodellübersicht, offene Punkte (unten)
 10. ⚠️ Webspace-Deploymentpaket: Migrationen/Seeder sind produktionsreif; ein
     fertig gepacktes ZIP mit `vendor/` ist nicht Teil dieses Commits (siehe
@@ -177,7 +180,7 @@ Bruttoertrag, Refinanzierungskosten, Deckungsbeitrag, Verwässerungsquote,
 php artisan test
 ```
 
-46 Feature-Tests, u. a.:
+48 Feature-Tests, u. a.:
 
 - `RoleDashboardTest` – jede der 13 Rollen erreicht ihr eigenes, ladbares Dashboard
 - `ReceivableWorkflowTest` – vollständiger Prozess Einreichen → Prüfen →
@@ -228,9 +231,8 @@ Blockieren den Prototyp nicht, sind aber vor Produktivbetrieb zu klären
 - Feldbezogene Berechtigungen unterhalb der Rollen-/Routenebene (z. B. einzelne
   Spalten je nach Feldsensitivität maskieren); Rollen-/Routen- und
   Dokumentensichtbarkeits-Ebene sind bereits serverseitig erzwungen (siehe oben)
-- Wasserzeichen für sensible Board-/Investorendokumente (Sperrvermerk und
-  Sichtbarkeitsfilterung sind bereits durchgesetzt, siehe oben; das Anbringen
-  eines Wasserzeichens beim Export fehlt noch)
+- Wasserzeichen ist für PDF-Dokumente bereits umgesetzt (siehe oben); andere
+  Dateitypen (DOCX, XLSX, Bilder) werden aktuell unverändert ausgeliefert
 - Cap-Table-/Beteiligungsmodul und Related-Party-/Auslagerungsregister sind
   bereits als Grundgerüst umgesetzt (siehe oben); fehlt noch: Versionierung/
   Historie über mehrere Beschlussstände, automatisierte Verwässerungsberechnung

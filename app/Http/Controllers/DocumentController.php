@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Services\WatermarkService;
 use App\Support\AuditLogger;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
@@ -45,7 +46,7 @@ class DocumentController extends Controller
         return back()->with('status', 'Dokument abgelegt: '.$document->title);
     }
 
-    public function download(Request $request, Document $document)
+    public function download(Request $request, Document $document, WatermarkService $watermark)
     {
         abort_unless(
             Document::visibleTo($request->user())->whereKey($document->id)->exists(),
@@ -55,7 +56,17 @@ class DocumentController extends Controller
         abort_if($document->export_locked, 403, 'Sperrvermerk: Export dieses Dokuments ist technisch gesperrt.');
         abort_unless($document->storage_path && Storage::disk('local')->exists($document->storage_path), 404);
 
-        AuditLogger::log('export', Document::class, $document->id, [], []);
+        AuditLogger::log('export', Document::class, $document->id, [], [], 'Download durch '.$request->user()->name);
+
+        $absolutePath = Storage::disk('local')->path($document->storage_path);
+
+        // Sensible Dokumente (alles ausser rein internen Arbeitsdokumenten) erhalten ein
+        // Wasserzeichen mit Status, Version und Empfaenger (Abschnitt 14).
+        if ($document->visibility !== 'intern' && $watermark->isSupported($absolutePath)) {
+            $stampedPath = $watermark->stamp($absolutePath, $document, $request->user()->name);
+
+            return response()->download($stampedPath, $document->title.'.pdf')->deleteFileAfterSend(true);
+        }
 
         return Storage::disk('local')->download($document->storage_path, $document->title);
     }
