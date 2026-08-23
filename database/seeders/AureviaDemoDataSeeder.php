@@ -9,6 +9,7 @@ use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\CreditLine;
 use App\Models\DebtorLimit;
+use App\Models\Decision;
 use App\Models\DemoSeed;
 use App\Models\DunningCase;
 use App\Models\Facility;
@@ -21,10 +22,12 @@ use App\Models\Opportunity;
 use App\Models\Organization;
 use App\Models\Payout;
 use App\Models\PayoutBatch;
+use App\Models\ProjectRisk;
 use App\Models\Purchase;
 use App\Models\Receivable;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Workstream;
 use App\Services\JournalService;
 use App\Services\PurchaseCalculator;
 use App\Support\TenantContext;
@@ -81,6 +84,7 @@ class AureviaDemoDataSeeder extends Seeder
         $this->seedReceivablesAndLifecycle();
         $this->seedCrmPipeline();
         $this->seedInvestorsAndFacilities();
+        $this->seedGovernanceCockpit();
 
         DemoSeed::create([
             'tenant_id' => $this->tenant->id,
@@ -669,6 +673,86 @@ class AureviaDemoDataSeeder extends Seeder
                     'notes' => 'Konzentration Top-10 nähert sich der vereinbarten Schwelle (Demo-Warnung).', 'is_demo' => true,
                 ]);
             }
+        }
+    }
+
+    /**
+     * Projekt-, Governance- und Annahmencockpit (Abschnitt 14.1): Workstreams A-J,
+     * Risk Log und ein erstes Decision Log. Alle Eintraege sind Hypothese/Entwurf
+     * und duerfen extern nicht angezeigt werden (Zugriff bereits auf Geschaeftsleitung/
+     * Superadmin beschraenkt, siehe routes/aurevia.php).
+     */
+    private function seedGovernanceCockpit(): void
+    {
+        $plan = [
+            ['A', 'Gesellschaft & Recht', 'geplant', 21],
+            ['B', 'Kapital & Finanzierung', 'in_arbeit', 14],
+            ['C', 'BaFin-Erlaubnis & Regulatorik', 'in_arbeit', 45],
+            ['D', 'Compliance, KYC/KYB & Datenschutz', 'blockiert', 30],
+            ['E', 'Produkt & Konditionen', 'in_arbeit', 20],
+            ['F', 'Technologie & Systeme (Intranet/CRM)', 'in_arbeit', 3],
+            ['G', 'Treasury & Bankanbindung', 'geplant', 60],
+            ['H', 'Vertrieb & Markt', 'geplant', 25],
+            ['I', 'Organisation & Personal', 'geplant', 40],
+            ['J', 'Investor Relations & Reporting', 'geplant', 35],
+        ];
+
+        $workstreams = [];
+        foreach ($plan as [$code, $title, $status, $daysUntilDue]) {
+            $workstreams[$code] = Workstream::create([
+                'tenant_id' => $this->tenant->id,
+                'code' => $code,
+                'title' => $title,
+                'owner_id' => $this->randomStaff(),
+                'deputy_id' => $this->randomStaff(),
+                'deliverables' => 'Siehe Kickoff-Paper und Workstream-Charter (Entwurf).',
+                'due_date' => now()->addDays($daysUntilDue),
+                'status' => $status,
+                'is_demo' => true,
+            ]);
+        }
+
+        $risks = [
+            ['workstream' => 'C', 'title' => 'BaFin-Erlaubnisverfahren dauert laenger als geplant', 'probability' => 'mittel', 'impact' => 'hoch', 'mitigation' => 'Fruehzeitige Vorabstimmung mit Kanzlei und BaFin, Pufferzeit im Zeitplan.'],
+            ['workstream' => 'B', 'title' => 'Eigenkapital reicht bei Base-Case-Anlaufverlusten nicht bis Break-even', 'probability' => 'mittel', 'impact' => 'hoch', 'mitigation' => 'Nachschusshypothese pruefen, Kostenkurve im Konservativ-Szenario gegensteuern.'],
+            ['workstream' => 'D', 'title' => 'DSGVO-Rechtsgrundlage fuer Gesundheitsdaten noch nicht extern bestaetigt', 'probability' => 'mittel', 'impact' => 'hoch', 'mitigation' => 'Rechtsgutachten beauftragen, Medical Data Firewall technisch bereits vorbereitet.'],
+            ['workstream' => 'G', 'title' => 'Kernbank fuer EBICS/PSD2 noch nicht ausgewaehlt', 'probability' => 'hoch', 'impact' => 'mittel', 'mitigation' => 'Provider-Adapter statt Festverdrahtung, RFP an mehrere Banken.'],
+            ['workstream' => 'H', 'title' => 'Abhaengigkeit von wenigen Empfehlungsgebern im Neugeschaeft', 'probability' => 'niedrig', 'impact' => 'mittel', 'mitigation' => 'Kanalmix in der CRM-Pipeline aktiv diversifizieren.'],
+        ];
+
+        foreach ($risks as $r) {
+            ProjectRisk::create([
+                'tenant_id' => $this->tenant->id,
+                'workstream_id' => $workstreams[$r['workstream']]->id,
+                'title' => $r['title'],
+                'probability' => $r['probability'],
+                'impact' => $r['impact'],
+                'mitigation' => $r['mitigation'],
+                'owner_id' => $this->randomStaff(),
+                'due_date' => now()->addDays(30),
+                'status' => 'offen',
+                'is_demo' => true,
+            ]);
+        }
+
+        $decisions = [
+            ['DEC-2026-001', 'Arbeitsname und Claim fuer die Demo festlegen', 'Beschlossen', -20],
+            ['DEC-2026-002', 'Zielrechtsform AG oder SE', 'In Pruefung', -10],
+            ['DEC-2026-003', 'Kernbank fuer Kontenmodell und EBICS', 'Externer Rat erforderlich', -5],
+            ['DEC-2026-004', 'Full-Service vs. reine Forderungsfinanzierung als Phase-1-Scope', 'Beschlossen', -15],
+        ];
+
+        foreach ($decisions as [$id, $title, $status, $daysAgo]) {
+            Decision::create([
+                'tenant_id' => $this->tenant->id,
+                'decision_id' => $id,
+                'title' => $title,
+                'status' => $status,
+                'decision_date' => now()->addDays($daysAgo),
+                'participants' => 'Gruendungsteam (Vorschlagsdatensaetze, siehe Personenliste)',
+                'owner' => 'Timo Müller',
+                'is_demo' => true,
+            ]);
         }
     }
 }

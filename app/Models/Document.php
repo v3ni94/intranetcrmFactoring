@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Support\RoleCatalog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Document extends Model
@@ -34,5 +36,28 @@ class Document extends Model
     public function isExternallyReleased(): bool
     {
         return $this->visibility === 'extern_freigegeben';
+    }
+
+    /**
+     * Erzwingt die Dokumentsichtbarkeit nach Rolle (Medical Data Firewall, Abschnitt 16.2).
+     * Interne Rollen sehen alles; Kunde/Investor/Beirat ausschliesslich extern freigegebene
+     * Dokumente, Kunde zusaetzlich nur eigene organisationsbezogene Dokumente.
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        $roles = $user->getRoleNames()->all();
+
+        if (array_intersect($roles, RoleCatalog::INTERNAL_ROLES)) {
+            return $query;
+        }
+
+        return $query->where('visibility', 'extern_freigegeben')
+            ->where(function (Builder $q) use ($user) {
+                $q->where(function (Builder $q2) {
+                    $q2->whereNull('related_type')->orWhere('related_type', '!=', Organization::class);
+                })->orWhere(function (Builder $q2) use ($user) {
+                    $q2->where('related_type', Organization::class)->where('related_id', $user->customer_org_id);
+                });
+            });
     }
 }

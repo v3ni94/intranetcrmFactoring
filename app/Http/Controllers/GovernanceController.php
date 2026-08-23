@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Decision;
 use App\Models\FinancialScenario;
+use App\Models\ProjectRisk;
+use App\Models\Workstream;
 
 class GovernanceController extends Controller
 {
@@ -19,7 +21,15 @@ class GovernanceController extends Controller
     {
         $decisions = Decision::orderByDesc('decision_date')->get();
         $scenarios = FinancialScenario::all();
+        $workstreams = Workstream::with('owner', 'deputy')->orderBy('code')->get();
+        $risks = ProjectRisk::with('workstream', 'owner')->get()->sortByDesc(fn (ProjectRisk $r) => $r->score())->values();
 
-        return view('governance.index', ['decisions' => $decisions, 'scenarios' => $scenarios, 'persons' => self::PERSONS]);
+        return view('governance.index', [
+            'decisions' => $decisions,
+            'scenarios' => $scenarios,
+            'persons' => self::PERSONS,
+            'workstreams' => $workstreams,
+            'risks' => $risks,
+        ]);
     }
 }

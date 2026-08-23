@@ -27,10 +27,12 @@ use App\Models\Organization;
 use App\Models\Payment;
 use App\Models\Payout;
 use App\Models\PayoutBatch;
+use App\Models\ProjectRisk;
 use App\Models\Purchase;
 use App\Models\Receivable;
 use App\Models\Task;
 use App\Models\Tenant;
+use App\Models\Workstream;
 use Database\Seeders\AureviaDemoDataSeeder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +51,7 @@ class DemoResetService
         BeneficialOwner::class, Contact::class, Contract::class, CrmActivity::class,
         Opportunity::class, Lead::class, Task::class, Document::class, FacilityEvent::class,
         Facility::class, BankAccount::class, FactoringProduct::class, Organization::class,
-        FinancialScenario::class, Decision::class, DemoSeed::class,
+        FinancialScenario::class, ProjectRisk::class, Workstream::class, Decision::class, DemoSeed::class,
     ];
 
     public function assertDemoTenant(Tenant $tenant): void

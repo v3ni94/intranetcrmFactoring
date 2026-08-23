@@ -26,7 +26,7 @@ class NavigationMenu
             ['label' => 'Verträge & Dokumente', 'route' => 'documents.index', 'roles' => null],
             ['label' => 'Aufgaben', 'route' => 'tasks.index', 'roles' => ['vertrieb_crm', 'operations', 'kredit_risiko', 'debitorenbuchhaltung', 'treasury_finance', 'compliance', 'geschaeftsleitung', 'superadmin_demo']],
             ['label' => 'Risiko & Compliance', 'route' => 'risk.index', 'roles' => ['kredit_risiko', 'compliance', 'geschaeftsleitung', 'superadmin_demo']],
-            ['label' => 'Reporting', 'route' => 'reports.index', 'roles' => ['geschaeftsleitung', 'beirat', 'investor', 'treasury_finance', 'superadmin_demo']],
+            ['label' => 'Reporting', 'route' => 'reports.index', 'roles' => ['geschaeftsleitung', 'treasury_finance', 'superadmin_demo']],
             ['label' => 'Audit & Freigaben', 'route' => 'audit.index', 'roles' => ['compliance', 'geschaeftsleitung', 'systemadministration', 'superadmin_demo']],
             ['label' => 'Projekt & Beschlüsse', 'route' => 'governance.index', 'roles' => ['geschaeftsleitung', 'superadmin_demo']],
             ['label' => 'Demo-Steuerung', 'route' => 'demo.index', 'roles' => ['superadmin_demo']],

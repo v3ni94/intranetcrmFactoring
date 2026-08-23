@@ -27,6 +27,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RiskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\Treasury\BankAccountController;
+use App\Support\RoleCatalog;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
@@ -48,96 +49,111 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{receivable}', [CustomerReceivableController::class, 'show'])->name('show');
     });
 
-    // Interne Forderungsbearbeitung
-    Route::prefix('forderungen')->name('receivables.')->group(function () {
-        Route::get('/', [ReceivableController::class, 'index'])->name('index');
-        Route::get('/{receivable}', [ReceivableController::class, 'show'])->name('show');
-        Route::post('/{receivable}/formale-pruefung', [ReceivableController::class, 'formalCheck'])->name('formal-check');
-        Route::post('/{receivable}/risiko-pruefung', [ReceivableController::class, 'riskCheck'])->name('risk-check');
-        Route::post('/{receivable}/ablehnen', [ReceivableController::class, 'reject'])->name('reject');
-    });
-
-    // Ankauf
-    Route::post('/forderungen/{receivable}/ankauf-berechnen', [PurchaseController::class, 'calculate'])->name('purchases.calculate');
-    Route::post('/ankauf/{purchase}/zweitfreigabe', [PurchaseController::class, 'approveSecond'])->name('purchases.approve-second');
-
-    // Auszahlungsbatches
-    Route::prefix('auszahlungen')->name('payouts.')->group(function () {
-        Route::get('/', [PayoutBatchController::class, 'index'])->name('index');
-        Route::post('/', [PayoutBatchController::class, 'store'])->name('store');
-        Route::post('/{batch}/erstfreigabe', [PayoutBatchController::class, 'approveFirst'])->name('approve-first');
-        Route::post('/{batch}/zweitfreigabe', [PayoutBatchController::class, 'approveSecond'])->name('approve-second');
-        Route::post('/{batch}/bestaetigen', [PayoutBatchController::class, 'confirm'])->name('confirm');
-    });
-
-    // Treasury
-    Route::get('/treasury/bankkonten', [BankAccountController::class, 'index'])->name('treasury.bank-accounts.index');
-
-    // Zahlungseingänge & Abstimmung
-    Route::prefix('zahlungseingaenge')->name('payments.')->group(function () {
-        Route::get('/', [PaymentController::class, 'index'])->name('index');
-        Route::post('/demo-import', [PaymentController::class, 'importDemo'])->name('import-demo');
-        Route::post('/{transaction}/zuordnen', [PaymentController::class, 'match'])->name('match');
-    });
-    Route::post('/forderungen/{receivable}/abrechnen', [PaymentController::class, 'settle'])->name('payments.settle');
-
-    // Mahnwesen & Streitfälle
-    Route::prefix('mahnwesen')->name('dunning.')->group(function () {
-        Route::get('/', [DunningController::class, 'index'])->name('index');
-        Route::post('/', [DunningController::class, 'store'])->name('store');
-        Route::post('/{case}/schliessen', [DunningController::class, 'close'])->name('close');
-    });
-
-    // CRM / Vertrieb
-    Route::prefix('crm/leads')->name('crm.leads.')->group(function () {
-        Route::get('/', [LeadController::class, 'index'])->name('index');
-        Route::post('/', [LeadController::class, 'store'])->name('store');
-        Route::post('/{lead}/status', [LeadController::class, 'updateStatus'])->name('update-status');
-    });
-    Route::prefix('crm/opportunities')->name('crm.opportunities.')->group(function () {
-        Route::get('/', [OpportunityController::class, 'index'])->name('index');
-        Route::post('/', [OpportunityController::class, 'store'])->name('store');
-        Route::post('/{opportunity}/stage', [OpportunityController::class, 'updateStage'])->name('update-stage');
-    });
-
-    // Kunden, Debitoren, Onboarding
-    Route::get('/kunden', [OrganizationController::class, 'index'])->name('organizations.index');
-    Route::get('/kunden/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
-    Route::get('/debitoren', [OrganizationController::class, 'debtors'])->name('debtors.index');
-    Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding.index');
-
-    // Kreditlinien & Limits
-    Route::prefix('kreditlinien')->name('credit-lines.')->group(function () {
-        Route::get('/', [CreditLineController::class, 'index'])->name('index');
-        Route::post('/', [CreditLineController::class, 'store'])->name('store');
-    });
-
-    // Investoren & Fazilitäten
-    Route::prefix('fazilitaeten')->name('facilities.')->group(function () {
-        Route::get('/', [FacilityController::class, 'index'])->name('index');
-        Route::post('/', [FacilityController::class, 'store'])->name('store');
-    });
+    // Investorenportal: eigene Kapitalbeziehung
     Route::get('/meine-kapitalbeziehung', InvestorDashboardController::class)->name('investor.facilities.index');
 
-    // Verträge & Dokumente
+    // Verträge & Dokumente — Sichtbarkeit beim Lesen/Download wird im Controller nach
+    // Rolle/visibility gefiltert (Datenraum fuer Investoren, Kundenvertraege). Das Ablegen
+    // neuer Dokumente bleibt eine interne Funktion (DMS-Pflege).
     Route::prefix('dokumente')->name('documents.')->group(function () {
         Route::get('/', [DocumentController::class, 'index'])->name('index');
-        Route::post('/', [DocumentController::class, 'store'])->name('store');
         Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
+        Route::middleware('role:'.implode('|', RoleCatalog::INTERNAL_ROLES))
+            ->post('/', [DocumentController::class, 'store'])->name('store');
     });
 
-    // Aufgaben
-    Route::prefix('aufgaben')->name('tasks.')->group(function () {
-        Route::get('/', [TaskController::class, 'index'])->name('index');
-        Route::post('/', [TaskController::class, 'store'])->name('store');
-        Route::post('/{task}/erledigt', [TaskController::class, 'complete'])->name('complete');
-    });
+    // Ab hier ausschliesslich interne Rollen. Medical Data Firewall (Abschnitt 16.2):
+    // Kunden-, Debitoren- und operative Prozessdaten duerfen Kunde/Investor/Beirat nicht
+    // ueber direkte URL-Aufrufe erreichen, unabhaengig von der Navigationsanzeige.
+    Route::middleware('role:'.implode('|', RoleCatalog::INTERNAL_ROLES))->group(function () {
+        // Interne Forderungsbearbeitung
+        Route::prefix('forderungen')->name('receivables.')->group(function () {
+            Route::get('/', [ReceivableController::class, 'index'])->name('index');
+            Route::get('/{receivable}', [ReceivableController::class, 'show'])->name('show');
+            Route::post('/{receivable}/formale-pruefung', [ReceivableController::class, 'formalCheck'])->name('formal-check');
+            Route::post('/{receivable}/risiko-pruefung', [ReceivableController::class, 'riskCheck'])->name('risk-check');
+            Route::post('/{receivable}/ablehnen', [ReceivableController::class, 'reject'])->name('reject');
+        });
 
-    // Risiko & Compliance / Reporting
-    Route::get('/risiko', [RiskController::class, 'index'])->name('risk.index');
-    Route::get('/reporting', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reporting/forderungen.csv', [ReportController::class, 'exportReceivables'])->name('reports.receivables');
-    Route::get('/reporting/journal.csv', [ReportController::class, 'exportJournal'])->name('reports.journal');
+        // Ankauf
+        Route::post('/forderungen/{receivable}/ankauf-berechnen', [PurchaseController::class, 'calculate'])->name('purchases.calculate');
+        Route::post('/ankauf/{purchase}/zweitfreigabe', [PurchaseController::class, 'approveSecond'])->name('purchases.approve-second');
+
+        // Auszahlungsbatches
+        Route::prefix('auszahlungen')->name('payouts.')->group(function () {
+            Route::get('/', [PayoutBatchController::class, 'index'])->name('index');
+            Route::post('/', [PayoutBatchController::class, 'store'])->name('store');
+            Route::post('/{batch}/erstfreigabe', [PayoutBatchController::class, 'approveFirst'])->name('approve-first');
+            Route::post('/{batch}/zweitfreigabe', [PayoutBatchController::class, 'approveSecond'])->name('approve-second');
+            Route::post('/{batch}/bestaetigen', [PayoutBatchController::class, 'confirm'])->name('confirm');
+        });
+
+        // Treasury
+        Route::get('/treasury/bankkonten', [BankAccountController::class, 'index'])->name('treasury.bank-accounts.index');
+
+        // Zahlungseingänge & Abstimmung
+        Route::prefix('zahlungseingaenge')->name('payments.')->group(function () {
+            Route::get('/', [PaymentController::class, 'index'])->name('index');
+            Route::post('/demo-import', [PaymentController::class, 'importDemo'])->name('import-demo');
+            Route::post('/{transaction}/zuordnen', [PaymentController::class, 'match'])->name('match');
+        });
+        Route::post('/forderungen/{receivable}/abrechnen', [PaymentController::class, 'settle'])->name('payments.settle');
+
+        // Mahnwesen & Streitfälle
+        Route::prefix('mahnwesen')->name('dunning.')->group(function () {
+            Route::get('/', [DunningController::class, 'index'])->name('index');
+            Route::post('/', [DunningController::class, 'store'])->name('store');
+            Route::post('/{case}/schliessen', [DunningController::class, 'close'])->name('close');
+        });
+
+        // CRM / Vertrieb
+        Route::prefix('crm/leads')->name('crm.leads.')->group(function () {
+            Route::get('/', [LeadController::class, 'index'])->name('index');
+            Route::post('/', [LeadController::class, 'store'])->name('store');
+            Route::post('/{lead}/status', [LeadController::class, 'updateStatus'])->name('update-status');
+        });
+        Route::prefix('crm/opportunities')->name('crm.opportunities.')->group(function () {
+            Route::get('/', [OpportunityController::class, 'index'])->name('index');
+            Route::post('/', [OpportunityController::class, 'store'])->name('store');
+            Route::post('/{opportunity}/stage', [OpportunityController::class, 'updateStage'])->name('update-stage');
+        });
+
+        // Kunden, Debitoren, Onboarding
+        Route::get('/kunden', [OrganizationController::class, 'index'])->name('organizations.index');
+        Route::get('/kunden/{organization}', [OrganizationController::class, 'show'])->name('organizations.show');
+        Route::get('/debitoren', [OrganizationController::class, 'debtors'])->name('debtors.index');
+        Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding.index');
+
+        // Kreditlinien & Limits
+        Route::prefix('kreditlinien')->name('credit-lines.')->group(function () {
+            Route::get('/', [CreditLineController::class, 'index'])->name('index');
+            Route::post('/', [CreditLineController::class, 'store'])->name('store');
+        });
+
+        // Investoren & Fazilitäten (interne Verwaltungssicht, siehe investor.facilities.index fuer den Investor selbst)
+        Route::prefix('fazilitaeten')->name('facilities.')->group(function () {
+            Route::get('/', [FacilityController::class, 'index'])->name('index');
+            Route::post('/', [FacilityController::class, 'store'])->name('store');
+        });
+
+        // Aufgaben
+        Route::prefix('aufgaben')->name('tasks.')->group(function () {
+            Route::get('/', [TaskController::class, 'index'])->name('index');
+            Route::post('/', [TaskController::class, 'store'])->name('store');
+            Route::post('/{task}/erledigt', [TaskController::class, 'complete'])->name('complete');
+        });
+
+        // Risiko & Compliance
+        Route::get('/risiko', [RiskController::class, 'index'])->name('risk.index');
+
+        // Reporting & Exporte: bewusst NICHT fuer Beirat/Investor freigegeben — die CSV-Exporte
+        // enthalten Kunden-/Debitorenidentitaeten auf Einzelforderungsebene. Beirat/Investor
+        // erhalten ihre Kennzahlen ausschliesslich aggregiert ueber die eigenen Dashboards
+        // (Board Pack / Reporting-Paket als gesonderter, aggregierter Export ist offener Punkt).
+        Route::get('/reporting', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reporting/forderungen.csv', [ReportController::class, 'exportReceivables'])->name('reports.receivables');
+        Route::get('/reporting/journal.csv', [ReportController::class, 'exportJournal'])->name('reports.journal');
+    });
 
     // Audit & Freigaben (nur Compliance, Geschaeftsleitung, Systemadministration, Superadmin)
     Route::middleware('role:compliance|geschaeftsleitung|systemadministration|superadmin_demo')

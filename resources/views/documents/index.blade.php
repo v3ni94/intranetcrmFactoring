@@ -30,6 +30,7 @@
             <div class="p-3">{{ $documents->links() }}</div>
         </div>
 
+        @can('upload-documents')
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">Dokument ablegen</h2>
             <form method="POST" action="{{ route('documents.store') }}" enctype="multipart/form-data" class="space-y-3">
@@ -54,5 +55,10 @@
                 <x-primary-button>Ablegen</x-primary-button>
             </form>
         </div>
+        @else
+        <div class="bg-white rounded-lg border border-aurevia-mist p-4 text-sm text-aurevia-label-gray">
+            Nur zum Lesen. Neue Dokumente werden ausschließlich von Aurevia-internen Rollen abgelegt.
+        </div>
+        @endcan
     </div>
 </x-app-layout>

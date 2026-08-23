@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $documents = Document::with('owner')->latest('id')->paginate(25);
+        $documents = Document::visibleTo($request->user())->with('owner')->latest('id')->paginate(25);
 
         return view('documents.index', compact('documents'));
     }
@@ -45,8 +45,13 @@ class DocumentController extends Controller
         return back()->with('status', 'Dokument abgelegt: '.$document->title);
     }
 
-    public function download(Document $document)
+    public function download(Request $request, Document $document)
     {
+        abort_unless(
+            Document::visibleTo($request->user())->whereKey($document->id)->exists(),
+            403,
+            'Dieses Dokument ist für Ihre Rolle nicht freigegeben.'
+        );
         abort_if($document->export_locked, 403, 'Sperrvermerk: Export dieses Dokuments ist technisch gesperrt.');
         abort_unless($document->storage_path && Storage::disk('local')->exists($document->storage_path), 404);
 

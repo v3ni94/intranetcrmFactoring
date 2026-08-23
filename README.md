@@ -15,14 +15,21 @@ gesetzt ist.
 Dieser Durchlauf implementiert den in Abschnitt 25 des Master-Prompts
 beschriebenen Kern-Prototyp:
 
-1. ✅ Informationsarchitektur und Datenmodell (32 Migrationen, ~30 Entitäten)
+1. ✅ Informationsarchitektur und Datenmodell (18 Migrationen, ~32 Entitäten)
 2. ✅ Rollen (13), Rechte (Spatie Permission) und Demo-Nutzer je Rolle
 3. ✅ Aurevia-Designsystem (CI-Farben, Logo-Platzhalter, Login, Navigation)
 4. ✅ Sechs Kern-Dashboards: Kunde, Mitarbeiter, Risiko, Geschäftsleitung, Beirat, Investor
 5. ✅ End-to-End-Forderungsprozess inkl. Vier-Augen-Prinzip, SEPA-Demo-Export, camt-Demo-Import
 6. ✅ CRM-Basis, Onboarding-Pipeline, Kreditlinien, Investoren/Fazilitäten, DMS-Basis, Aufgaben
 7. ✅ Realistisch verknüpfte Demo-Daten (Abschnitt 21) inkl. Demo-Reset/-Löschen
-8. ✅ Automatisierte Tests (30 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC, Journal-Bilanz)
+7a. ✅ Medical Data Firewall serverseitig erzwungen: Kunden-/Debitorenlisten und interne
+    Prozessrouten sind für Kunde/Investor/Beirat per Route-Middleware gesperrt (nicht nur
+    aus der Navigation ausgeblendet); Dokumentsichtbarkeit wird nach `visibility` und
+    Kunden-Zugehörigkeit gefiltert (`Document::scopeVisibleTo()`)
+7b. ✅ Governance-Cockpit erweitert um Workstreams A–J und Risk Log (Abschnitt 14.1),
+    inkl. Demo-Decision-Log
+8. ✅ Automatisierte Tests (36 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
+   Medical-Data-Firewall-Zugriffskontrolle, Journal-Bilanz)
 9. ⚠️ Diese Anleitung, Testzugänge, Datenmodellübersicht, offene Punkte (unten)
 10. ⚠️ Webspace-Deploymentpaket: Migrationen/Seeder sind produktionsreif; ein
     fertig gepacktes ZIP mit `vendor/` ist nicht Teil dieses Commits (siehe
@@ -108,7 +115,7 @@ Zentrale Migrationsgruppen (`database/migrations/2026_08_23_*`):
 - **Investoren**: `facilities`, `facility_events`
 - **DMS**: `documents` (Sperrvermerk, Sichtbarkeitsstufen)
 - **Governance**: `audit_events` (hash-verkettet), `approval_requests`,
-  `decisions`, `financial_scenarios`
+  `decisions`, `financial_scenarios`, `workstreams`, `project_risks`
 - **Demo**: `demo_seeds`, `demo_reset_logs`
 
 Alle Geldbeträge sind `DECIMAL(19,4)`, niemals `FLOAT`/`DOUBLE`. Jede
@@ -156,7 +163,7 @@ Bruttoertrag, Refinanzierungskosten, Deckungsbeitrag, Verwässerungsquote,
 php artisan test
 ```
 
-30 Feature-Tests, u. a.:
+36 Feature-Tests, u. a.:
 
 - `RoleDashboardTest` – jede der 13 Rollen erreicht ihr eigenes, ladbares Dashboard
 - `ReceivableWorkflowTest` – vollständiger Prozess Einreichen → Prüfen →
@@ -164,6 +171,9 @@ php artisan test
   Person als Zweitfreigeber ablehnt (403) und die Journalbuchung ausgeglichen ist
 - `DemoResetTest` – Reset/Löschen nur für Superadmin, nur im Demo-Mandanten
   (Löschversuch an einem Produktivmandanten wirft eine Exception)
+- `MedicalDataFirewallTest` – Investor/Beirat/Kunde erreichen interne
+  Kunden-/Debitorenlisten auch per direktem URL-Aufruf nicht (403), sehen nur
+  extern freigegebene bzw. eigene Dokumente und können keine Dokumente hochladen
 
 ## Deployment auf PHP-Webspace (Abschnitt 22)
 
@@ -194,12 +204,14 @@ Blockieren den Prototyp nicht, sind aber vor Produktivbetrieb zu klären
 - Echte Bank-/PSD2-/EBICS-Anbindung statt Demo-Dateien
 - Vollständige Adapter für KYC/KYB, PEP/Sanktionen, Bonität, E-Signatur,
   DATEV/ERP-Export, Praxissoftware-Schnittstellen
-- Feldbezogene Berechtigungen (aktuell nur Rollen-/Routenebene)
-- Wasserzeichen und technisch erzwungene Exportsperre für sensible
-  Board-/Investorendokumente (Sperrvermerk-Feld existiert, Durchsetzung im
-  DMS ist minimal)
-- Cap-Table-/Beteiligungsmodul, vollständiges Governance-Cockpit
-  (Workstreams, Risk Log, Related-Party-Register)
+- Feldbezogene Berechtigungen unterhalb der Rollen-/Routenebene (z. B. einzelne
+  Spalten je nach Feldsensitivität maskieren); Rollen-/Routen- und
+  Dokumentensichtbarkeits-Ebene sind bereits serverseitig erzwungen (siehe oben)
+- Wasserzeichen für sensible Board-/Investorendokumente (Sperrvermerk und
+  Sichtbarkeitsfilterung sind bereits durchgesetzt, siehe oben; das Anbringen
+  eines Wasserzeichens beim Export fehlt noch)
+- Cap-Table-/Beteiligungsmodul, Related-Party-Register (Workstreams und Risk
+  Log sind bereits Teil des Governance-Cockpits, siehe oben)
 - MFA/Passkeys, SSO (OIDC/SAML), automatisierte Backups/Restore-Tests
 - Mehrsprachigkeit (Englisch technisch vorbereiten)
 
