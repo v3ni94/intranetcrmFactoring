@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuditController;
+use App\Http\Controllers\CapTableController;
 use App\Http\Controllers\CreditLineController;
 use App\Http\Controllers\Crm\LeadController;
 use App\Http\Controllers\Crm\OpportunityController;
@@ -172,6 +173,15 @@ Route::middleware(['auth'])->group(function () {
     // Projekt, Annahmen & Beschlüsse (nur Geschaeftsleitung/Superadmin)
     Route::middleware('role:geschaeftsleitung|superadmin_demo')
         ->get('/projekt', [GovernanceController::class, 'index'])->name('governance.index');
+
+    // Cap-Table, Related Parties & Auslagerungen (streng geschuetzt, nur Geschaeftsleitung/Superadmin)
+    Route::middleware('role:geschaeftsleitung|superadmin_demo')->prefix('captable')->name('captable.')->group(function () {
+        Route::get('/', [CapTableController::class, 'index'])->name('index');
+        Route::post('/gesellschafter', [CapTableController::class, 'storeShareholder'])->name('shareholders.store');
+        Route::post('/instrumente', [CapTableController::class, 'storeEquityInstrument'])->name('equity-instruments.store');
+        Route::post('/related-parties', [CapTableController::class, 'storeRelatedParty'])->name('related-parties.store');
+        Route::post('/auslagerungen', [CapTableController::class, 'storeOutsourcing'])->name('outsourcing.store');
+    });
 
     // Integrationen & Schnittstellen-Status (Abschnitt 20)
     Route::middleware('role:systemadministration|geschaeftsleitung|superadmin_demo')

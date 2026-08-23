@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\BankAccount;
 use App\Models\BankTransaction;
 use App\Models\BeneficialOwner;
+use App\Models\CapTableScenario;
 use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\CreditLine;
@@ -12,6 +13,7 @@ use App\Models\DebtorLimit;
 use App\Models\Decision;
 use App\Models\DemoSeed;
 use App\Models\DunningCase;
+use App\Models\EquityInstrument;
 use App\Models\Facility;
 use App\Models\FacilityEvent;
 use App\Models\FactoringProduct;
@@ -20,11 +22,14 @@ use App\Models\KycCase;
 use App\Models\Lead;
 use App\Models\Opportunity;
 use App\Models\Organization;
+use App\Models\OutsourcingRegistration;
 use App\Models\Payout;
 use App\Models\PayoutBatch;
 use App\Models\ProjectRisk;
 use App\Models\Purchase;
 use App\Models\Receivable;
+use App\Models\RelatedParty;
+use App\Models\Shareholder;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Workstream;
@@ -85,6 +90,7 @@ class AureviaDemoDataSeeder extends Seeder
         $this->seedCrmPipeline();
         $this->seedInvestorsAndFacilities();
         $this->seedGovernanceCockpit();
+        $this->seedCapTableAndRegisters();
 
         DemoSeed::create([
             'tenant_id' => $this->tenant->id,
@@ -751,6 +757,75 @@ class AureviaDemoDataSeeder extends Seeder
                 'decision_date' => now()->addDays($daysAgo),
                 'participants' => 'Gruendungsteam (Vorschlagsdatensaetze, siehe Personenliste)',
                 'owner' => 'Timo Müller',
+                'is_demo' => true,
+            ]);
+        }
+    }
+
+    /**
+     * Cap-Table-Hypothese, Related-Party-Register und Auslagerungsregister
+     * (Abschnitt 14.1/19). Streng geschuetztes Modul, alle Werte Entwurf/Hypothese.
+     */
+    private function seedCapTableAndRegisters(): void
+    {
+        $scenario = CapTableScenario::create([
+            'tenant_id' => $this->tenant->id,
+            'scenario_key' => 'gruendung_v0_1',
+            'label' => 'Gründungsszenario v0.1',
+            'status' => 'Hypothese',
+            'description' => 'Vorlaeufige Kapitalverteilung gemaess Founder-Term-Sheet-Geruest (Entwurf).',
+            'is_demo' => true,
+        ]);
+
+        $founders = [
+            ['Timo Müller', 40], ['David Enns', 15], ['Jürgen Brink', 15], ['Carsten Walprecht', 15], ['Jan Walprecht', 15],
+        ];
+
+        foreach ($founders as [$name, $percent]) {
+            $shareholder = Shareholder::create([
+                'tenant_id' => $this->tenant->id, 'name' => $name, 'type' => 'person',
+                'notes' => 'Vorschlagsdatensatz Gruendungsteam, keine beschlossene Beteiligung.', 'is_demo' => true,
+            ]);
+
+            EquityInstrument::create([
+                'tenant_id' => $this->tenant->id,
+                'shareholder_id' => $shareholder->id,
+                'cap_table_scenario_id' => $scenario->id,
+                'instrument_type' => 'anteile',
+                'percentage' => $percent,
+                'valid_from' => now()->toDateString(),
+                'status' => 'Hypothese',
+                'is_demo' => true,
+            ]);
+        }
+
+        RelatedParty::create([
+            'tenant_id' => $this->tenant->id,
+            'name' => 'Carsten Walprecht',
+            'relation_type' => 'gesellschafter',
+            'description' => 'Mögliche Doppelrolle als Vertriebspartner und Gesellschafter (Demo-Hinweis).',
+            'conflict_status' => 'zu_pruefen',
+            'mitigation' => 'Interessenkonfliktprüfung im Rahmen von Workstream A vorgesehen.',
+            'is_demo' => true,
+        ]);
+
+        $outsourcing = [
+            ['Hosting/Webspace', 'PHP-Webspace-Provider (Demo)', 'finanzdaten', 'hoch', true],
+            ['KYC/KYB-Pruefung', 'Sandbox-Adapter (Demo)', 'personenbezogen', 'hoch', true],
+            ['Buchhaltung/DATEV', 'Steuerberatung (Demo)', 'finanzdaten', 'mittel', false],
+        ];
+
+        foreach ($outsourcing as [$service, $provider, $access, $criticality, $dora]) {
+            OutsourcingRegistration::create([
+                'tenant_id' => $this->tenant->id,
+                'service' => $service,
+                'provider' => $provider,
+                'data_access' => $access,
+                'criticality' => $criticality,
+                'contract_reference' => 'Entwurf, noch nicht unterzeichnet',
+                'exit_plan' => 'Exit-Plan noch zu erstellen (offener Punkt).',
+                'audit_right' => false,
+                'dora_relevant' => $dora,
                 'is_demo' => true,
             ]);
         }

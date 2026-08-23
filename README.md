@@ -34,7 +34,9 @@ beschriebenen Kern-Prototyp:
     Einstellungen → Integrationen
 7d. ✅ MFA (TOTP) verpflichtend für alle Rollen außer Kunde (Abschnitt 18):
     Einrichtungszwang, echte Challenge beim Login, Wiederherstellungscodes
-8. ✅ Automatisierte Tests (43 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
+7e. ✅ Cap-Table-Modul, Related-Party- und Auslagerungsregister (Abschnitt 14.1/19),
+    streng geschützt auf Geschäftsleitung/Superadmin
+8. ✅ Automatisierte Tests (46 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
    Medical-Data-Firewall-Zugriffskontrolle, MFA-Erzwingung, Journal-Bilanz)
 9. ⚠️ Diese Anleitung, Testzugänge, Datenmodellübersicht, offene Punkte (unten)
 10. ⚠️ Webspace-Deploymentpaket: Migrationen/Seeder sind produktionsreif; ein
@@ -175,7 +177,7 @@ Bruttoertrag, Refinanzierungskosten, Deckungsbeitrag, Verwässerungsquote,
 php artisan test
 ```
 
-43 Feature-Tests, u. a.:
+46 Feature-Tests, u. a.:
 
 - `RoleDashboardTest` – jede der 13 Rollen erreicht ihr eigenes, ladbares Dashboard
 - `ReceivableWorkflowTest` – vollständiger Prozess Einreichen → Prüfen →
@@ -229,8 +231,9 @@ Blockieren den Prototyp nicht, sind aber vor Produktivbetrieb zu klären
 - Wasserzeichen für sensible Board-/Investorendokumente (Sperrvermerk und
   Sichtbarkeitsfilterung sind bereits durchgesetzt, siehe oben; das Anbringen
   eines Wasserzeichens beim Export fehlt noch)
-- Cap-Table-/Beteiligungsmodul, Related-Party-Register (Workstreams und Risk
-  Log sind bereits Teil des Governance-Cockpits, siehe oben)
+- Cap-Table-/Beteiligungsmodul und Related-Party-/Auslagerungsregister sind
+  bereits als Grundgerüst umgesetzt (siehe oben); fehlt noch: Versionierung/
+  Historie über mehrere Beschlussstände, automatisierte Verwässerungsberechnung
 - Passkeys/WebAuthn als MFA-Alternative zu TOTP, SSO (OIDC/SAML) für Banken/
   Partner, automatisierte Backups/Restore-Tests (MFA per TOTP ist bereits
   umgesetzt, siehe oben)

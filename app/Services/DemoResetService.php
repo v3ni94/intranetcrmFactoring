@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BankAccount;
 use App\Models\BankTransaction;
 use App\Models\BeneficialOwner;
+use App\Models\CapTableScenario;
 use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\CreditLine;
@@ -14,6 +15,7 @@ use App\Models\Decision;
 use App\Models\DemoSeed;
 use App\Models\Document;
 use App\Models\DunningCase;
+use App\Models\EquityInstrument;
 use App\Models\Facility;
 use App\Models\FacilityEvent;
 use App\Models\FactoringProduct;
@@ -26,12 +28,15 @@ use App\Models\KycCase;
 use App\Models\Lead;
 use App\Models\Opportunity;
 use App\Models\Organization;
+use App\Models\OutsourcingRegistration;
 use App\Models\Payment;
 use App\Models\Payout;
 use App\Models\PayoutBatch;
 use App\Models\ProjectRisk;
 use App\Models\Purchase;
 use App\Models\Receivable;
+use App\Models\RelatedParty;
+use App\Models\Shareholder;
 use App\Models\Task;
 use App\Models\Tenant;
 use App\Models\Workstream;
@@ -48,6 +53,8 @@ class DemoResetService
     /** Reihenfolge beachtet Fremdschluessel: Kinder vor Eltern. */
     private const MODELS_IN_DELETE_ORDER = [
         IntegrationEvent::class, IntegrationProvider::class,
+        EquityInstrument::class, Shareholder::class, CapTableScenario::class,
+        RelatedParty::class, OutsourcingRegistration::class,
         Payment::class, BankTransaction::class, Payout::class, PayoutBatch::class,
         JournalLine::class, JournalEntry::class, DunningCase::class, Purchase::class,
         Receivable::class, CreditLine::class, DebtorLimit::class, KycCase::class,
