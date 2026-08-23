@@ -38,9 +38,13 @@ beschriebenen Kern-Prototyp:
     streng geschützt auf Geschäftsleitung/Superadmin
 7f. ✅ Automatisches Wasserzeichen (Status, Version, Empfänger) beim Download
     sensibler PDF-Dokumente (Abschnitt 14), echte Stempelung mit FPDI/TCPDF
-8. ✅ Automatisierte Tests (48 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
+7g. ✅ Tägliches verschlüsseltes Backup (Abschnitt 22.3): `php artisan
+    aurevia:backup` sichert Datenbank + `storage/app` als AES-256-verschlüsseltes
+    ZIP, per Scheduler täglich um 02:30 Uhr, alte Backups werden automatisch
+    aufgeräumt
+8. ✅ Automatisierte Tests (51 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
    Medical-Data-Firewall-Zugriffskontrolle, MFA-Erzwingung, Journal-Bilanz,
-   Wasserzeichen-Nachweis)
+   Wasserzeichen-Nachweis, Backup/Verschlüsselung/Aufräumen)
 9. ⚠️ Diese Anleitung, Testzugänge, Datenmodellübersicht, offene Punkte (unten)
 10. ⚠️ Webspace-Deploymentpaket: Migrationen/Seeder sind produktionsreif; ein
     fertig gepacktes ZIP mit `vendor/` ist nicht Teil dieses Commits (siehe
@@ -180,7 +184,7 @@ Bruttoertrag, Refinanzierungskosten, Deckungsbeitrag, Verwässerungsquote,
 php artisan test
 ```
 
-48 Feature-Tests, u. a.:
+51 Feature-Tests, u. a.:
 
 - `RoleDashboardTest` – jede der 13 Rollen erreicht ihr eigenes, ladbares Dashboard
 - `ReceivableWorkflowTest` – vollständiger Prozess Einreichen → Prüfen →
@@ -196,6 +200,9 @@ php artisan test
 - `MedicalDataFirewallTest` – Investor/Beirat/Kunde erreichen interne
   Kunden-/Debitorenlisten auch per direktem URL-Aufruf nicht (403), sehen nur
   extern freigegebene bzw. eigene Dokumente und können keine Dokumente hochladen
+- `BackupCommandTest` – `aurevia:backup` erzeugt ein Archiv, verschlüsselt es
+  bei gesetztem Schlüssel (AES-256, per OpenSSL entschlüsselbar) und räumt
+  Archive auf, die älter als `--keep-days` sind
 
 ## Deployment auf PHP-Webspace (Abschnitt 22)
 
@@ -211,9 +218,20 @@ php artisan test
    `AureviaDemoDataSeeder` nur im geschützten Demo-Mandanten verwenden).
 5. Cronjob für `php artisan schedule:run` einrichten, sofern der Webspace
    Cron anbietet (Abschnitt 22.3); andernfalls verbleibt synchrone
-   Verarbeitung als dokumentierte Einschränkung.
-6. Tägliches verschlüsseltes Backup von Datenbank und `storage/app` einrichten
-   und Restore testen (noch nicht automatisiert, siehe offene Punkte).
+   Verarbeitung als dokumentierte Einschränkung. Derselbe Cronjob löst auch
+   das tägliche Backup aus (`aurevia:backup`, siehe unten).
+6. `AUREVIA_BACKUP_KEY` (langer zufälliger Schlüssel) in der `.env` setzen und
+   sicher verwahren (z. B. Passwortmanager) — ohne diesen Schlüssel bleibt das
+   tägliche Backup unverschlüsselt. Das Backup läuft automatisch täglich um
+   02:30 Uhr über den Scheduler und legt verschlüsselte Archive unter
+   `storage/app/backups` ab (Aufbewahrung standardmäßig 14 Tage, `php artisan
+   aurevia:backup --keep-days=30` zum Anpassen). Restore: Archiv mit `openssl
+   enc -d -aes-256-cbc -pbkdf2 -salt -in <datei>.zip.enc -out backup.zip -pass
+   pass:<AUREVIA_BACKUP_KEY>` entschlüsseln, entpacken, `database/` enthält
+   den Datenbank-Dump (SQL bzw. `.sqlite`-Kopie), `app/` die Dokumente/SEPA-Dateien.
+   Empfehlung: Backups zusätzlich regelmäßig extern (z. B. per SFTP/Cloud-
+   Speicher) sichern, da sie sonst auf demselben Webspace liegen wie die
+   Originaldaten.
 
 ## Offene Punkte / Roadmap Demo → Produktion
 
@@ -237,8 +255,10 @@ Blockieren den Prototyp nicht, sind aber vor Produktivbetrieb zu klären
   bereits als Grundgerüst umgesetzt (siehe oben); fehlt noch: Versionierung/
   Historie über mehrere Beschlussstände, automatisierte Verwässerungsberechnung
 - Passkeys/WebAuthn als MFA-Alternative zu TOTP, SSO (OIDC/SAML) für Banken/
-  Partner, automatisierte Backups/Restore-Tests (MFA per TOTP ist bereits
-  umgesetzt, siehe oben)
+  Partner (MFA per TOTP ist bereits umgesetzt, siehe oben)
+- Tägliches verschlüsseltes Backup ist bereits umgesetzt und automatisiert
+  getestet (siehe oben); ein Restore auf einer echten Zielumgebung sollte vor
+  Produktivbetrieb einmal manuell durchgespielt werden
 - Mehrsprachigkeit (Englisch technisch vorbereiten)
 
 ## Sicherheitsleitplanken (bereits umgesetzt)
