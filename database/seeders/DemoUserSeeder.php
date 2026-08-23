@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\RoleCatalog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use PragmaRX\Google2FA\Google2FA;
 
 class DemoUserSeeder extends Seeder
 {
@@ -34,6 +35,7 @@ class DemoUserSeeder extends Seeder
             );
 
             $user->syncRoles([$slug]);
+            $this->preConfirmMfaIfRequired($user);
         }
 
         // Zusaetzlicher persoenlicher Zugang fuer den Kick-off, Rolle Geschaeftsleitung.
@@ -48,5 +50,26 @@ class DemoUserSeeder extends Seeder
             ]
         );
         $lead->syncRoles(['geschaeftsleitung', 'superadmin_demo']);
+        $this->preConfirmMfaIfRequired($lead);
+    }
+
+    /**
+     * MFA ist fuer interne/Investor-/Beirats-Rollen Pflicht (Abschnitt 18). Damit der
+     * gefuehrte Kick-off-Klickpfad (Abschnitt 21.2) nicht bei jedem Rollenwechsel durch
+     * eine TOTP-Einrichtung unterbrochen wird, ist MFA fuer Demo-Nutzer bereits vorkonfiguriert.
+     * Der Mechanismus selbst bleibt unveraendert erzwungen (siehe EnsureMfaIsConfirmed) und
+     * ist ueber IntegrationAdapterTest/RoleDashboardTest hinaus separat getestet.
+     */
+    private function preConfirmMfaIfRequired(User $user): void
+    {
+        if (! $user->requiresMfa() || $user->hasConfirmedTwoFactor()) {
+            return;
+        }
+
+        $user->forceFill([
+            'two_factor_secret' => (new Google2FA)->generateSecretKey(),
+            'two_factor_confirmed_at' => now(),
+            'mfa_enabled' => true,
+        ])->save();
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\RoleCatalog;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -39,6 +40,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -52,7 +55,24 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_demo' => 'boolean',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * MFA ist Pflicht fuer alle internen, Investor- und Beirats-Rollen (Abschnitt 18).
+     * Kunden-Rollen sind im Prototyp ausgenommen (geringeres Schutzniveau der Kontodaten).
+     */
+    public function requiresMfa(): bool
+    {
+        return $this->hasAnyRole(array_merge(RoleCatalog::INTERNAL_ROLES, ['investor', 'beirat']));
+    }
+
+    public function hasConfirmedTwoFactor(): bool
+    {
+        return ! is_null($this->two_factor_confirmed_at);
     }
 
     public function tenant()

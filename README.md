@@ -28,17 +28,23 @@ beschriebenen Kern-Prototyp:
     Kunden-Zugehörigkeit gefiltert (`Document::scopeVisibleTo()`)
 7b. ✅ Governance-Cockpit erweitert um Workstreams A–J und Risk Log (Abschnitt 14.1),
     inkl. Demo-Decision-Log
-8. ✅ Automatisierte Tests (36 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
-   Medical-Data-Firewall-Zugriffskontrolle, Journal-Bilanz)
+7c. ✅ Provider-Adapter-Architektur (Abschnitt 20): Registry + Ereignisprotokoll für
+    11 Adapter-Kategorien (Bank, KYC/KYB, PEP/Sanktionen, Handelsregister/UBO,
+    Bonität, E-Signatur, Praxisimport, DATEV, OCR, Inkasso, BI), Statusseite unter
+    Einstellungen → Integrationen
+7d. ✅ MFA (TOTP) verpflichtend für alle Rollen außer Kunde (Abschnitt 18):
+    Einrichtungszwang, echte Challenge beim Login, Wiederherstellungscodes
+8. ✅ Automatisierte Tests (43 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
+   Medical-Data-Firewall-Zugriffskontrolle, MFA-Erzwingung, Journal-Bilanz)
 9. ⚠️ Diese Anleitung, Testzugänge, Datenmodellübersicht, offene Punkte (unten)
 10. ⚠️ Webspace-Deploymentpaket: Migrationen/Seeder sind produktionsreif; ein
     fertig gepacktes ZIP mit `vendor/` ist nicht Teil dieses Commits (siehe
     „Deployment auf PHP-Webspace" unten für die nötigen Schritte)
 
 Nicht bzw. nur ansatzweise umgesetzt (siehe „Offene Punkte"): vollständige
-feldbezogene Berechtigungen, alle Adapter-Stubs (KYC/Bonität/E-Signatur/DATEV
-etc.), Cap-Table-Modul, PSD2/EBICS-Anbindung, vollständige Wasserzeichen-/
-Sperrvermerk-Durchsetzung im Download, mehrsprachige Oberfläche.
+feldbezogene Berechtigungen unterhalb der Rollenebene, Cap-Table-Modul,
+Passkeys/SSO, vollständige Wasserzeichen-Durchsetzung im Download,
+mehrsprachige Oberfläche.
 
 ## Demo starten
 
@@ -59,6 +65,12 @@ Aufrufbar unter `http://127.0.0.1:8000/login`.
 Passwort für **alle** Demo-Zugänge: `Aurevia-Demo-2026!`
 (Login-Seite bietet im Demo-Modus eine Rollenauswahl, die E-Mail und Passwort
 automatisch einträgt.)
+
+**Zwei-Faktor-Authentifizierung (MFA):** Für alle Rollen außer Kunde ist MFA
+gemäß Abschnitt 18 verpflichtend. Nach Passwort-Login folgt eine TOTP-Abfrage;
+im Demo-Modus wird der aktuell gültige Code für vorkonfigurierte Demo-Zugänge
+direkt auf der Abfrageseite angezeigt und vorausgefüllt (echte Prüfung, kein
+Bypass) — Sie müssen nur noch „Bestätigen“ klicken.
 
 | Rolle | E-Mail |
 |---|---|
@@ -163,7 +175,7 @@ Bruttoertrag, Refinanzierungskosten, Deckungsbeitrag, Verwässerungsquote,
 php artisan test
 ```
 
-36 Feature-Tests, u. a.:
+43 Feature-Tests, u. a.:
 
 - `RoleDashboardTest` – jede der 13 Rollen erreicht ihr eigenes, ladbares Dashboard
 - `ReceivableWorkflowTest` – vollständiger Prozess Einreichen → Prüfen →
@@ -171,6 +183,11 @@ php artisan test
   Person als Zweitfreigeber ablehnt (403) und die Journalbuchung ausgeglichen ist
 - `DemoResetTest` – Reset/Löschen nur für Superadmin, nur im Demo-Mandanten
   (Löschversuch an einem Produktivmandanten wirft eine Exception)
+- `IntegrationAdapterTest` – Adapter-Registry wird vollständig angelegt, Aufrufe
+  protokollieren Ereignisse und Providerstatus, Statusseite nur für interne Rollen
+- `TwoFactorAuthenticationTest` – interne Rollen werden ohne MFA zur Einrichtung
+  gezwungen, Kunde nicht, Login schlägt bei falschem TOTP-Code fehl und
+  gelingt erst mit gültigem Code
 - `MedicalDataFirewallTest` – Investor/Beirat/Kunde erreichen interne
   Kunden-/Debitorenlisten auch per direktem URL-Aufruf nicht (403), sehen nur
   extern freigegebene bzw. eigene Dokumente und können keine Dokumente hochladen
@@ -201,9 +218,11 @@ Blockieren den Prototyp nicht, sind aber vor Produktivbetrieb zu klären
 - Rechtsform, Registerangaben, endgültige Organbesetzung
 - Erlaubnispflicht nach KWG, GwG-Prozesse, DSGVO-Freigabe für Gesundheitsdaten
   (aktuell technisch vorbereitet, rechtlich nicht geprüft)
-- Echte Bank-/PSD2-/EBICS-Anbindung statt Demo-Dateien
-- Vollständige Adapter für KYC/KYB, PEP/Sanktionen, Bonität, E-Signatur,
-  DATEV/ERP-Export, Praxissoftware-Schnittstellen
+- Echte Bank-/PSD2-/EBICS-Anbindung statt Demo-Dateien (Adapter-Grundgerüst
+  steht bereits, siehe Provider-Adapter-Architektur oben)
+- Anschluss echter Anbieter hinter den registrierten Adaptern (KYC/KYB,
+  PEP/Sanktionen, Bonität, E-Signatur, DATEV/ERP, Praxissoftware) — aktuell
+  alle im Sandbox-/Demo-Modus, siehe Einstellungen → Integrationen
 - Feldbezogene Berechtigungen unterhalb der Rollen-/Routenebene (z. B. einzelne
   Spalten je nach Feldsensitivität maskieren); Rollen-/Routen- und
   Dokumentensichtbarkeits-Ebene sind bereits serverseitig erzwungen (siehe oben)
@@ -212,7 +231,9 @@ Blockieren den Prototyp nicht, sind aber vor Produktivbetrieb zu klären
   eines Wasserzeichens beim Export fehlt noch)
 - Cap-Table-/Beteiligungsmodul, Related-Party-Register (Workstreams und Risk
   Log sind bereits Teil des Governance-Cockpits, siehe oben)
-- MFA/Passkeys, SSO (OIDC/SAML), automatisierte Backups/Restore-Tests
+- Passkeys/WebAuthn als MFA-Alternative zu TOTP, SSO (OIDC/SAML) für Banken/
+  Partner, automatisierte Backups/Restore-Tests (MFA per TOTP ist bereits
+  umgesetzt, siehe oben)
 - Mehrsprachigkeit (Englisch technisch vorbereiten)
 
 ## Sicherheitsleitplanken (bereits umgesetzt)
