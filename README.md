@@ -42,9 +42,21 @@ beschriebenen Kern-Prototyp:
     aurevia:backup` sichert Datenbank + `storage/app` als AES-256-verschlüsseltes
     ZIP, per Scheduler täglich um 02:30 Uhr, alte Backups werden automatisch
     aufgeräumt
-8. ✅ Automatisierte Tests (51 Feature-Tests, u. a. Vier-Augen-Prinzip, RBAC,
-   Medical-Data-Firewall-Zugriffskontrolle, MFA-Erzwingung, Journal-Bilanz,
-   Wasserzeichen-Nachweis, Backup/Verschlüsselung/Aufräumen)
+7h. ✅ Sicherheits- und Stabilitäts-Härtung v2.0 (vollständiger Codereview mit
+    39 verifizierten Funden): 2FA-Brute-Force-Schutz mit Replay-Sperre und
+    gehashten Wiederherstellungscodes, strikte default-deny-Dokumentsichtbarkeit
+    inkl. Freigabe-Ablauf, Transaktions-/Sperrschutz für Ankauf, Auszahlung und
+    Zahlungszuordnung, kumulierte Teilzahlungslogik, atomare Audit-Hash-Kette
+    mit Prüfkommando (`php artisan aurevia:audit-verify`), Status-Guards für
+    Ablehnung/Mahnwesen inkl. Verlust-Ausbuchung, Unique-Constraints und Indizes,
+    Produktions-Init ohne SSH (`php artisan aurevia:init`), automatische
+    Überfälligkeits-Markierung (`aurevia:mark-overdue`, täglich 03:00 Uhr),
+    Performance-Fixes (N+1, SQL-Aggregation) und Versionsanzeige im Footer
+8. ✅ Automatisierte Tests (67 Feature-Tests, u. a. Vier-Augen-Prinzip für
+   Ankauf UND Auszahlung, RBAC, Medical-Data-Firewall-Zugriffskontrolle,
+   MFA-Erzwingung inkl. Recovery-Codes/Rate-Limit/Replay, Journal-Bilanz,
+   Teilzahlungen und Doppelzuordnungs-Schutz, Audit-Ketten-Verifikation,
+   Wasserzeichen-Matrix, Backup, Produktions-Init)
 9. ✅ Diese Anleitung, Testzugänge, Datenmodellübersicht, offene Punkte (unten)
 10. ✅ Schritt-für-Schritt-Deployment-Anleitung für PHP-Webspace inkl.
     Subdomain-Verknüpfung, FileZilla-Upload, Datenbank-Einrichtung und
@@ -54,9 +66,8 @@ beschriebenen Kern-Prototyp:
     enthält)
 
 Nicht bzw. nur ansatzweise umgesetzt (siehe „Offene Punkte"): vollständige
-feldbezogene Berechtigungen unterhalb der Rollenebene, Cap-Table-Modul,
-Passkeys/SSO, vollständige Wasserzeichen-Durchsetzung im Download,
-mehrsprachige Oberfläche.
+feldbezogene Berechtigungen unterhalb der Rollenebene, Passkeys/SSO,
+Wasserzeichen für Nicht-PDF-Dateitypen, mehrsprachige Oberfläche.
 
 ## Demo starten
 
@@ -187,7 +198,7 @@ Bruttoertrag, Refinanzierungskosten, Deckungsbeitrag, Verwässerungsquote,
 php artisan test
 ```
 
-51 Feature-Tests, u. a.:
+67 Feature-Tests, u. a.:
 
 - `RoleDashboardTest` – jede der 13 Rollen erreicht ihr eigenes, ladbares Dashboard
 - `ReceivableWorkflowTest` – vollständiger Prozess Einreichen → Prüfen →

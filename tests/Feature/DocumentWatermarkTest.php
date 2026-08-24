@@ -67,6 +67,75 @@ class DocumentWatermarkTest extends TestCase
         $this->assertNotSame($originalSize, (int) $response->headers->get('content-length'), 'Wasserzeichen-Kopie sollte sich von der Originaldatei unterscheiden.');
     }
 
+    public function test_confidential_pdf_is_watermarked_for_internal_download(): void
+    {
+        $tenant = Tenant::where('slug', 'aurevia-demo')->firstOrFail();
+        TenantContext::set($tenant->id);
+
+        $path = $this->makeMinimalPdf();
+        $originalSize = Storage::disk('local')->size($path);
+
+        $document = Document::create([
+            'tenant_id' => $tenant->id,
+            'title' => 'Vertrauliche Analyse',
+            'category' => 'sonstiges',
+            'visibility' => 'vertraulich',
+            'storage_path' => $path,
+        ]);
+
+        $operations = User::where('email', 'demo.operations@aurevia-factoring.de')->firstOrFail();
+
+        $response = $this->actingAs($operations)->get(route('documents.download', $document));
+
+        $response->assertOk();
+        $this->assertNotSame($originalSize, (int) $response->headers->get('content-length'), 'Vertrauliche PDFs müssen gestempelt werden.');
+    }
+
+    public function test_non_pdf_file_is_delivered_unmodified(): void
+    {
+        $tenant = Tenant::where('slug', 'aurevia-demo')->firstOrFail();
+        TenantContext::set($tenant->id);
+
+        Storage::disk('local')->put('documents/liste.csv', "spalte1;spalte2\nwert1;wert2\n");
+        $originalSize = Storage::disk('local')->size('documents/liste.csv');
+
+        $document = Document::create([
+            'tenant_id' => $tenant->id,
+            'title' => 'CSV-Liste',
+            'category' => 'board_pack',
+            'visibility' => 'extern_freigegeben',
+            'storage_path' => 'documents/liste.csv',
+        ]);
+
+        $investor = User::where('email', 'demo.investor@aurevia-factoring.de')->firstOrFail();
+
+        $response = $this->actingAs($investor)->get(route('documents.download', $document));
+
+        $response->assertOk();
+        $this->assertSame($originalSize, (int) $response->headers->get('content-length'), 'Nicht-PDF-Dateien werden unverändert ausgeliefert (dokumentierte Einschränkung).');
+    }
+
+    public function test_expired_release_is_not_downloadable_by_externals(): void
+    {
+        $tenant = Tenant::where('slug', 'aurevia-demo')->firstOrFail();
+        TenantContext::set($tenant->id);
+
+        $path = $this->makeMinimalPdf();
+
+        $document = Document::create([
+            'tenant_id' => $tenant->id,
+            'title' => 'Abgelaufene Freigabe',
+            'category' => 'board_pack',
+            'visibility' => 'extern_freigegeben',
+            'release_expires_at' => now()->subDay(),
+            'storage_path' => $path,
+        ]);
+
+        $investor = User::where('email', 'demo.investor@aurevia-factoring.de')->firstOrFail();
+
+        $this->actingAs($investor)->get(route('documents.download', $document))->assertForbidden();
+    }
+
     public function test_internal_working_document_is_not_watermarked(): void
     {
         $tenant = Tenant::where('slug', 'aurevia-demo')->firstOrFail();

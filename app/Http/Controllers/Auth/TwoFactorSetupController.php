@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use PragmaRX\Google2FA\Google2FA;
@@ -49,9 +50,11 @@ class TwoFactorSetupController extends Controller
 
         $recoveryCodes = collect(range(1, 8))->map(fn () => Str::upper(Str::random(10)))->all();
 
+        // Nur gehasht speichern (wie Passwoerter): ein DB-Leak gibt keine nutzbaren
+        // Codes preis. Die Klartext-Codes werden genau einmal angezeigt (Session-Flash).
         $user->forceFill([
             'two_factor_confirmed_at' => now(),
-            'two_factor_recovery_codes' => $recoveryCodes,
+            'two_factor_recovery_codes' => array_map(fn (string $code) => Hash::make($code), $recoveryCodes),
             'mfa_enabled' => true,
         ])->save();
 

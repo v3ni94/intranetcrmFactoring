@@ -1,0 +1,33 @@
+#!/bin/sh
+# Einmaliges Deployment-Skript fuer IONOS-Webspace (UnixCron).
+#
+# Hintergrund: Das IONOS-Cronjob-Feld "Befehl" erlaubt nur a-z A-Z 0-9 - _ . /
+# (keine Leerzeichen), daher koennen artisan-Befehle nicht direkt eingetragen
+# werden. Stattdessen: diese Datei anpassen, als "deploy.sh" in den
+# Projekt-Hauptordner hochladen (gleiche Ebene wie "artisan"), per FileZilla
+# Rechtsklick -> Dateiberechtigungen -> 755 setzen und im IONOS-Cronjob als
+# Befehl nur den Pfad eintragen, z. B.:
+#
+#   /homepages/12/d345678901/htdocs/intranet/deploy.sh
+#
+# Nach erfolgreichem Lauf den Cronjob wieder loeschen. Das Skript ist
+# idempotent — ein versehentlicher zweiter Lauf richtet keinen Schaden an.
+
+# >>> ANPASSEN: absoluter Pfad zum Projekt-Hauptordner (wo "artisan" liegt)
+BASE=/homepages/XX/dXXXXXXXXX/htdocs/intranet
+
+# APP_KEY nur erzeugen, wenn noch keiner gesetzt ist. Ein bestehender Key darf
+# NIE ueberschrieben werden, sonst sind bereits verschluesselte Daten
+# (z. B. MFA-Secrets) unlesbar.
+if ! grep -q '^APP_KEY=base64:' "$BASE/.env"; then
+  php "$BASE/artisan" key:generate --force
+fi
+
+php "$BASE/artisan" migrate --force
+php "$BASE/artisan" aurevia:init --admin-email=timo@muellerhv.de --admin-password='HIER-STARKES-PASSWORT'
+php "$BASE/artisan" config:cache
+php "$BASE/artisan" route:cache
+php "$BASE/artisan" view:cache
+
+# WICHTIG: Nach erfolgreichem Lauf das Passwort aus dieser Datei entfernen
+# oder die Datei ganz vom Server loeschen.

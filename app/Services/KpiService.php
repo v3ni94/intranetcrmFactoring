@@ -132,10 +132,12 @@ class KpiService
         return round(((float) Purchase::sum('deductions_amount') / $nominal) * 100, 2);
     }
 
-    public function overdueRatioPercent(): float
+    public function overdueRatioPercent(?float $totalOpen = null): float
     {
         $openStatuses = ['angekauft', 'zur_auszahlung', 'zahlung_angewiesen', 'ausgezahlt', 'teilbezahlt', 'ueberfaellig'];
-        $totalOpen = (float) Receivable::whereIn('status', $openStatuses)->sum('invoice_amount');
+        // Aufrufer, die die offene Gesamtsumme bereits berechnet haben (z.B. das
+        // GL-Dashboard), koennen sie uebergeben und sparen die doppelte Full-Table-Summe.
+        $totalOpen ??= (float) Receivable::whereIn('status', $openStatuses)->sum('invoice_amount');
         if ($totalOpen <= 0) {
             return 0.0;
         }
@@ -164,23 +166,18 @@ class KpiService
 
     public function averageDso(): float
     {
-        $paid = Receivable::whereIn('status', ['bezahlt', 'abgerechnet'])
-            ->whereHas('payments')
-            ->with('payments')
+        // Aggregation in SQL (eine Zeile je Forderung mit letztem Zahldatum) statt
+        // alle jemals bezahlten Forderungen samt Zahlungen als Modelle zu laden.
+        $rows = Receivable::query()
+            ->whereIn('receivables.status', ['bezahlt', 'abgerechnet'])
+            ->join('payments', 'payments.receivable_id', '=', 'receivables.id')
+            ->groupBy('receivables.id', 'receivables.invoice_date')
+            ->selectRaw('receivables.invoice_date as invoice_date, MAX(payments.matched_at) as last_payment')
             ->get();
 
-        if ($paid->isEmpty()) {
-            return 0.0;
-        }
-
-        $days = $paid->map(function (Receivable $r) {
-            $lastPayment = $r->payments->max('matched_at');
-            if (! $lastPayment) {
-                return null;
-            }
-
-            return Carbon::parse($r->invoice_date)->diffInDays(Carbon::parse($lastPayment));
-        })->filter();
+        $days = $rows->map(fn ($r) => $r->last_payment
+            ? Carbon::parse($r->invoice_date)->diffInDays(Carbon::parse($r->last_payment))
+            : null)->filter();
 
         return $days->isEmpty() ? 0.0 : round($days->avg(), 1);
     }
@@ -188,25 +185,25 @@ class KpiService
     public function ageingBuckets(): array
     {
         $openStatuses = ['angekauft', 'zur_auszahlung', 'zahlung_angewiesen', 'ausgezahlt', 'teilbezahlt', 'ueberfaellig'];
-        $receivables = Receivable::whereIn('status', $openStatuses)->get(['due_date', 'invoice_amount']);
 
-        $buckets = ['0-30' => 0.0, '31-60' => 0.0, '61-90' => 0.0, '>90' => 0.0];
+        // Eine Aggregatabfrage statt Hydrierung aller offenen Forderungen.
+        // Faelligkeit <= 30 Tage ueberfaellig (inkl. noch nicht faellig) = Bucket 0-30.
+        $d30 = now()->subDays(30)->toDateString();
+        $d60 = now()->subDays(60)->toDateString();
+        $d90 = now()->subDays(90)->toDateString();
 
-        foreach ($receivables as $r) {
-            $daysOverdue = max(0, Carbon::parse($r->due_date)->diffInDays(now(), false));
-            $amount = (float) $r->invoice_amount;
+        $row = Receivable::whereIn('status', $openStatuses)->selectRaw('
+            COALESCE(SUM(CASE WHEN due_date >= ? THEN invoice_amount ELSE 0 END), 0) as b1,
+            COALESCE(SUM(CASE WHEN due_date < ? AND due_date >= ? THEN invoice_amount ELSE 0 END), 0) as b2,
+            COALESCE(SUM(CASE WHEN due_date < ? AND due_date >= ? THEN invoice_amount ELSE 0 END), 0) as b3,
+            COALESCE(SUM(CASE WHEN due_date < ? THEN invoice_amount ELSE 0 END), 0) as b4
+        ', [$d30, $d30, $d60, $d60, $d90, $d90])->first();
 
-            if ($daysOverdue <= 30) {
-                $buckets['0-30'] += $amount;
-            } elseif ($daysOverdue <= 60) {
-                $buckets['31-60'] += $amount;
-            } elseif ($daysOverdue <= 90) {
-                $buckets['61-90'] += $amount;
-            } else {
-                $buckets['>90'] += $amount;
-            }
-        }
-
-        return $buckets;
+        return [
+            '0-30' => (float) $row->b1,
+            '31-60' => (float) $row->b2,
+            '61-90' => (float) $row->b3,
+            '>90' => (float) $row->b4,
+        ];
     }
 }

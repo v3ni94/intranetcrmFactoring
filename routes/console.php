@@ -11,3 +11,7 @@ Artisan::command('inspire', function () {
 // Taegliches verschluesseltes Backup (Abschnitt 22.3). Setzt einen funktionierenden
 // Cronjob "php artisan schedule:run" auf dem Webspace voraus, siehe README.
 Schedule::command('aurevia:backup')->dailyAt('02:30')->onOneServer();
+
+// Faellige Forderungen taeglich als ueberfaellig markieren (speist Mahnwesen und
+// Overdue-KPIs; ohne diesen Job wuerde der Status in Produktion nie gesetzt).
+Schedule::command('aurevia:mark-overdue')->dailyAt('03:00')->onOneServer();

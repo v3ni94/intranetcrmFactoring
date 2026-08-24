@@ -181,7 +181,6 @@ ssh <benutzer>@<host>
 cd /pfad/zum/intranet-ordner
 php artisan key:generate --force
 php artisan migrate --force
-php artisan storage:link
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
@@ -201,9 +200,28 @@ er wird nur einmal gebraucht):
 ```
 php /pfad/zum/intranet-ordner/artisan key:generate --force
 php /pfad/zum/intranet-ordner/artisan migrate --force
-php /pfad/zum/intranet-ordner/artisan storage:link
 php /pfad/zum/intranet-ordner/artisan config:cache
 ```
+
+### Variante B-IONOS: Cronjob-Feld erlaubt keine Leerzeichen
+
+Bei IONOS (und einigen anderen Hostern) erlaubt das UnixCron-Feld „Befehl"
+nur die Zeichen `a-z A-Z 0-9 - _ . /` — also **keine Leerzeichen** und damit
+keine direkten artisan-Befehle. Lösung: die Befehle in ein Shell-Skript
+packen und im Cronjob nur den Skript-Pfad eintragen.
+
+1. Vorlage `deploy/ionos-deploy.sh.example` aus diesem Repository nehmen,
+   den `BASE`-Pfad sowie E-Mail/Passwort für den Admin anpassen.
+2. Als `deploy.sh` in den Projekt-Hauptordner hochladen (gleiche Ebene wie
+   `artisan`), per FileZilla Rechtsklick → Dateiberechtigungen → **755**.
+3. Im Cronjob-Formular: Typ **UnixCron**, als Befehl **nur den Pfad**
+   `/homepages/XX/dXXXXXXXXX/htdocs/intranet/deploy.sh`, Intervall täglich
+   mit dem nächstgelegenen Zeitfenster.
+4. Nach dem Lauf: Cronjob löschen und `deploy.sh` vom Server entfernen
+   (sie enthält das initiale Admin-Passwort).
+
+Der absolute Pfad (`/homepages/…`) steht im IONOS-Datei-Manager in der
+Pfadanzeige bzw. bei den FTP-Zugangsdaten.
 
 Falls der Hoster überhaupt keine CLI-Ausführung erlaubt (reines
 FTP-only-Hosting ohne Cron/SSH), ist dieses Projekt auf diesem Tarif nicht
@@ -211,31 +229,33 @@ lauffähig — Laravel benötigt zwingend PHP-CLI-Zugriff für Migrationen und
 den Scheduler. In dem Fall beim Hoster auf einen Tarif mit Cronjob-Funktion
 wechseln.
 
-## 8. Ersten Benutzer anlegen
+## 8. Rollen, Mandant und ersten Benutzer anlegen
 
-Da produktiv **keine** Demodaten geseedet werden, existiert nach Schritt 7
-noch kein Login. Einen ersten Administrator-Zugang per Tinker anlegen
-(SSH bzw. Cronjob-Einmalbefehl wie in Schritt 7):
+Da produktiv **keine** Demodaten geseedet werden, existieren nach Schritt 7
+weder Rollen noch ein Mandant noch ein Login. Dafür gibt es den
+idempotenten Init-Befehl (per SSH oder als Zeile im `deploy.sh`-Skript,
+siehe Variante B-IONOS oben — dort ist er bereits enthalten):
 
 ```bash
-php artisan tinker --execute="
-\$u = App\Models\User::create([
-    'name' => 'Timo Müller',
-    'email' => 'timo@muellerhv.de',
-    'password' => Hash::make('<STARKES-PASSWORT-HIER>'),
-    'tenant_id' => 1,
-]);
-\$u->assignRole('superadmin_demo');
-"
+php artisan aurevia:init --admin-email=timo@muellerhv.de --admin-password='<STARKES-PASSWORT-HIER>'
 ```
 
-Rolle und `tenant_id` an die tatsächliche Mandantenstruktur anpassen (siehe
-`App\Support\RoleCatalog` für die 13 verfügbaren Rollen). Nach dem ersten
-Login unter **Profil** sofort die Zwei-Faktor-Authentifizierung (MFA)
-einrichten — sie ist für alle internen Rollen verpflichtend.
+Der Befehl legt in einem Durchgang an: alle 13 Rollen, den
+Produktiv-Mandanten (`aurevia-produktiv`) und den ersten Admin-Benutzer mit
+den Rollen Geschäftsleitung und Systemadministration. Wird
+`--admin-password` weggelassen, erzeugt der Befehl ein sicheres
+Zufallspasswort und gibt es einmalig in der Ausgabe aus (bei Cron-Ausführung
+landet die Ausgabe in der Cron-Benachrichtigungs-E-Mail des Hosters).
+Mehrfaches Ausführen ist unschädlich — bestehende Benutzer werden nie
+überschrieben.
 
-Das anfängliche Passwort sollte einmalig, individuell und stark sein und
-nach der ersten Anmeldung nicht wiederverwendet werden.
+Beim ersten Login erzwingt die Anwendung die Einrichtung der
+Zwei-Faktor-Authentifizierung (MFA) — sie ist für alle internen Rollen
+verpflichtend.
+
+Das anfängliche Passwort sollte einmalig, individuell und stark sein
+(mindestens 12 Zeichen, der Befehl lehnt kürzere ab) und nach der ersten
+Anmeldung geändert werden, wenn es in einer Skriptdatei stand.
 
 ## 9. Cronjob für Scheduler und Backup einrichten
 
@@ -262,11 +282,33 @@ eine Aufgabe fällig ist, und führt sie dann nach.
 - [ ] `php artisan about` (per SSH/Cronjob) zeigt `Environment: production`,
       `Debug Mode: OFF`, Datenbankverbindung `OK`
 - [ ] Ein Dokument lässt sich hochladen und wieder herunterladen
-      (`storage:link` aus Schritt 7 muss gesetzt sein, sonst 404)
+      (Dokumente liegen geschützt unter `storage/app`, die Auslieferung
+      läuft über die Anwendung selbst — kein `storage:link` nötig)
 - [ ] `php artisan aurevia:backup` manuell einmal ausführen und prüfen,
       dass unter `storage/app/backups` eine `.zip.enc`-Datei entsteht
 - [ ] Nach 24 Stunden prüfen, ob der Cronjob aus Schritt 9 das Backup
       automatisch um 02:30 Uhr erzeugt hat
+
+## Fehlerbilder und Lösungen
+
+- **„Forbidden – You don't have permission to access this resource"** nach
+  der Docroot-Umstellung: Fast immer fehlt die versteckte Datei
+  `public/.htaccess` auf dem Server (FileZilla überträgt versteckte Dateien
+  nur, wenn unter Server → „Versteckte Dateien anzeigen" aktiviert ist und
+  sie beim Upload mitmarkiert wurden). Prüfen: In FileZilla versteckte
+  Dateien einblenden, in den `public/`-Ordner auf dem Server wechseln —
+  liegen dort `.htaccess` **und** `index.php`? Fehlende `.htaccess` aus dem
+  entpackten Deployment-ZIP einzeln nachladen. Zweithäufigste Ursache:
+  doppelte Verschachtelung beim Upload (Docroot zeigt auf `…/intranet`, die
+  Dateien liegen aber unter `…/intranet/intranet/`) — Docroot exakt auf den
+  Ordner stellen, in dem `index.php` liegt.
+- **HTTP 500 nach erfolgreichem Seitenaufbau der Domain**: meist fehlende
+  oder fehlerhafte `.env` (Datenbankzugangsdaten prüfen) oder Migrationen
+  noch nicht gelaufen. Details stehen in `storage/logs/laravel.log` auf dem
+  Server — nie `APP_DEBUG=true` in Produktion setzen, um Fehler im Browser
+  zu sehen.
+- **Login-Seite lädt, aber ohne Styling**: `public/build/` wurde nicht
+  (vollständig) hochgeladen — Ordner per FileZilla erneut übertragen.
 
 ## Bekannte Einschränkungen vor Produktivstart
 

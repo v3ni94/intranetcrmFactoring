@@ -23,7 +23,7 @@ Route::middleware('guest')->group(function () {
     // Zweiter Faktor beim Login (Abschnitt 18). 'guest', da der Erstfaktor bereits
     // wieder abgemeldet wurde, bis der TOTP-Code bestaetigt ist.
     Route::get('zwei-faktor', [TwoFactorChallengeController::class, 'show'])->name('two-factor.challenge');
-    Route::post('zwei-faktor', [TwoFactorChallengeController::class, 'store']);
+    Route::post('zwei-faktor', [TwoFactorChallengeController::class, 'store'])->middleware('throttle:10,1');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');

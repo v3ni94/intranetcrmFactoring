@@ -30,7 +30,12 @@ class OrganizationController extends Controller
 
     public function show(Organization $organization)
     {
-        $organization->load('contacts', 'beneficialOwners', 'contracts', 'creditLines', 'kycCases', 'receivables');
+        // Forderungshistorie begrenzen: die Detailseite zeigt die juengsten Vorgaenge,
+        // nicht die komplette Historie (waechst in Produktion unbegrenzt).
+        $organization->load([
+            'contacts', 'beneficialOwners', 'contracts', 'creditLines', 'kycCases',
+            'receivables' => fn ($q) => $q->latest('id')->limit(50),
+        ]);
 
         return view('organizations.show', compact('organization'));
     }

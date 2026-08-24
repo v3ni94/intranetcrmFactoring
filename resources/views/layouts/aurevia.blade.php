@@ -95,7 +95,7 @@
 
             <footer class="text-[11px] text-aurevia-label-gray px-6 py-3 border-t border-aurevia-mist">
                 Aurevia Factoring AG (Arbeitsname) · Projektgesellschaft in Vorbereitung · Registerangaben folgen nach Gründung ·
-                Interne Nutzung · Alle Kennzahlen ohne Gewähr, Modellrechnungen sind keine Zusage.
+                Interne Nutzung · Alle Kennzahlen ohne Gewähr, Modellrechnungen sind keine Zusage. · v{{ config('aurevia.version') }}
             </footer>
         </div>
     </div>

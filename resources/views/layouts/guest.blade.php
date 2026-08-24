@@ -36,7 +36,7 @@
             </div>
 
             <footer class="text-[11px] text-aurevia-mist text-center py-4">
-                Aurevia Factoring AG (Arbeitsname) · Interne Nutzung · Keine öffentliche Registrierung
+                Aurevia Factoring AG (Arbeitsname) · Interne Nutzung · Keine öffentliche Registrierung · v{{ config('aurevia.version') }}
             </footer>
         </div>
     </body>

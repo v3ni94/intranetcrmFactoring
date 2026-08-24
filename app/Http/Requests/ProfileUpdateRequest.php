@@ -22,7 +22,8 @@ class ProfileUpdateRequest extends FormRequest
                 'required',
                 'string',
                 'lowercase',
-                'email',
+                // strict: CRLF-Mitigation fuer CVE-2026-48019 (Laravel 11.x)
+                'email:strict',
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],

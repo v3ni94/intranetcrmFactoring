@@ -24,7 +24,7 @@ class GeschaeftsleitungDashboardController extends Controller
         $refinancingCost = $kpi->refinancingCost();
         $contributionMargin = $kpi->contributionMargin();
         $dilution = $kpi->dilutionRatePercent();
-        $overdueRatio = $kpi->overdueRatioPercent();
+        $overdueRatio = $kpi->overdueRatioPercent($outstandingPortfolio);
         $top10 = $kpi->top10ConcentrationPercent();
         $dso = $kpi->averageDso();
         $ageing = $kpi->ageingBuckets();

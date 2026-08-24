@@ -1,0 +1,24 @@
+#!/bin/sh
+# Dauerhafter Scheduler-Cronjob fuer IONOS-Webspace (UnixCron).
+#
+# Das IONOS-Befehlsfeld erlaubt keine Leerzeichen, daher wird
+# "php artisan schedule:run" ueber dieses Wrapper-Skript aufgerufen.
+#
+# Einrichtung:
+# 1. BASE-Pfad unten anpassen.
+# 2. Als "cron.sh" in den Projekt-Hauptordner hochladen, Rechte 755.
+# 3. IONOS-Cronjob anlegen: Typ UnixCron, Befehl nur der Pfad
+#      /homepages/XX/dXXXXXXXXX/htdocs/intranet/cron.sh
+#    Intervall: so haeufig wie der Tarif erlaubt (idealerweise minuetlich;
+#    IONOS "Einfach" erlaubt oft nur taeglich — dann im Modus "Erweitert"
+#    einen engeren Takt waehlen, sofern verfuegbar).
+#
+# Der Laravel-Scheduler prueft bei jedem Aufruf selbst, welche Aufgaben
+# faellig sind (Backup 02:30 Uhr, Ueberfaelligkeits-Markierung 03:00 Uhr).
+# Laeuft der Cron nur taeglich, werden faellige Aufgaben beim naechsten
+# Lauf nachgeholt.
+
+# >>> ANPASSEN: absoluter Pfad zum Projekt-Hauptordner (wo "artisan" liegt)
+BASE=/homepages/XX/dXXXXXXXXX/htdocs/intranet
+
+php "$BASE/artisan" schedule:run

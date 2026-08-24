@@ -101,16 +101,17 @@ class BackupCommand extends Command
         }
 
         $config = config("database.connections.{$connection}");
+        // Passwort ueber MYSQL_PWD statt --password=, damit es auf Shared Hosting
+        // nicht in der Prozessliste (ps) fuer andere Nutzer sichtbar ist.
         $process = new Process([
             'mysqldump',
             '--host='.$config['host'],
             '--port='.($config['port'] ?? 3306),
             '--user='.$config['username'],
-            '--password='.$config['password'],
             '--single-transaction',
             '--routines',
             $config['database'],
-        ]);
+        ], null, ['MYSQL_PWD' => $config['password']]);
         $process->setTimeout(600);
         $process->run();
 

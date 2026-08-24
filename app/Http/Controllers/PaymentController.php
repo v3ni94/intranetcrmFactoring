@@ -11,14 +11,16 @@ use App\Services\PaymentMatcher;
 use App\Support\AuditLogger;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
     public function index(PaymentMatcher $matcher)
     {
+        $candidates = $matcher->openReceivables();
         $openTransactions = BankTransaction::where('status', 'offen')->where('amount', '>', 0)->get()
-            ->map(function (BankTransaction $t) use ($matcher) {
-                $t->suggestion = $matcher->suggest($t);
+            ->map(function (BankTransaction $t) use ($matcher, $candidates) {
+                $t->suggestion = $matcher->suggest($t, $candidates);
 
                 return $t;
             });
@@ -51,29 +53,52 @@ class PaymentController extends Controller
         $data = $request->validate(['receivable_id' => 'required|exists:receivables,id']);
         $receivable = Receivable::findOrFail($data['receivable_id']);
 
-        $payment = $transaction->payments()->create([
-            'tenant_id' => TenantContext::id(),
-            'receivable_id' => $receivable->id,
-            'amount' => $transaction->amount,
-            'type' => (float) $transaction->amount >= (float) $receivable->invoice_amount ? 'eingang' : 'teilzahlung',
-            'match_confidence_percent' => 100,
-            'match_reason' => 'Manuell bestätigt durch '.$request->user()->name,
-            'matched_by' => $request->user()->id,
-            'matched_at' => now(),
-        ]);
+        abort_unless(
+            in_array($receivable->status, PaymentMatcher::OPEN_RECEIVABLE_STATUSES, true),
+            422,
+            'Zahlungen können nur offenen Forderungen zugeordnet werden.'
+        );
 
-        $transaction->update(['status' => 'zugeordnet']);
-        $transaction->bankAccount->increment('balance_amount', $transaction->amount);
+        DB::transaction(function () use ($request, $transaction, $receivable, $journal) {
+            // Zeilensperre + erneute Statuspruefung: verhindert Doppelzuordnung
+            // derselben Banktransaktion (Doppelklick, parallele Requests).
+            $transaction = BankTransaction::whereKey($transaction->id)->lockForUpdate()->firstOrFail();
+            abort_unless($transaction->status === 'offen', 422, 'Diese Banktransaktion ist bereits zugeordnet.');
 
-        $newStatus = (float) $transaction->amount >= (float) $receivable->invoice_amount ? 'bezahlt' : 'teilbezahlt';
-        $receivable->update(['status' => $newStatus]);
+            // Status anhand der KUMULIERTEN Zahlungen bestimmen, nicht nur der
+            // aktuellen Transaktion — sonst wird eine in Raten bezahlte Forderung
+            // nie 'bezahlt' und die Reservefreigabe (settle) bleibt blockiert.
+            $paid = (float) $receivable->payments()->sum('amount') + (float) $transaction->amount;
+            $fullyPaid = $paid >= (float) $receivable->invoice_amount;
 
-        $journal->post('zahlungseingang', [
-            ['account' => '1200', 'debit' => (float) $transaction->amount, 'organization_id' => $receivable->organization_id],
-            ['account' => '1400', 'credit' => (float) $transaction->amount, 'organization_id' => $receivable->organization_id],
-        ], Receivable::class, $receivable->id, $request->user()->id);
+            $transaction->payments()->create([
+                'tenant_id' => TenantContext::id(),
+                'receivable_id' => $receivable->id,
+                'amount' => $transaction->amount,
+                'type' => $fullyPaid ? 'eingang' : 'teilzahlung',
+                'match_confidence_percent' => 100,
+                'match_reason' => 'Manuell bestätigt durch '.$request->user()->name,
+                'matched_by' => $request->user()->id,
+                'matched_at' => now(),
+            ]);
 
-        AuditLogger::log('update', Receivable::class, $receivable->id, [], ['status' => $newStatus], 'Zahlungszuordnung');
+            $transaction->update(['status' => 'zugeordnet']);
+            $transaction->bankAccount->increment('balance_amount', $transaction->amount);
+
+            $newStatus = $fullyPaid ? 'bezahlt' : 'teilbezahlt';
+            $receivable->update(['status' => $newStatus]);
+
+            $journal->post('zahlungseingang', [
+                ['account' => '1200', 'debit' => (float) $transaction->amount, 'organization_id' => $receivable->organization_id],
+                ['account' => '1400', 'credit' => (float) $transaction->amount, 'organization_id' => $receivable->organization_id],
+            ], Receivable::class, $receivable->id, $request->user()->id);
+
+            $note = 'Zahlungszuordnung';
+            if ($paid > (float) $receivable->invoice_amount) {
+                $note .= sprintf(' — Überzahlung: kumuliert %.2f bei Rechnungsbetrag %.2f', $paid, (float) $receivable->invoice_amount);
+            }
+            AuditLogger::log('update', Receivable::class, $receivable->id, [], ['status' => $newStatus], $note);
+        });
 
         return back()->with('status', 'Zahlung zugeordnet und verbucht.');
     }

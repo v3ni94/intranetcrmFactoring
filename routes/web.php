@@ -3,9 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+// Redirect-Route statt Closure, damit "php artisan route:cache" funktioniert.
+Route::redirect('/', '/login');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

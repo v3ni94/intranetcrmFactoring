@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Models\Organization;
 use App\Services\WatermarkService;
 use App\Support\AuditLogger;
 use App\Support\TenantContext;
@@ -24,8 +25,20 @@ class DocumentController extends Controller
             'title' => 'required|string|max:255',
             'category' => 'required|in:vertrag,onboarding,kyc,rechnung,board_pack,sonstiges',
             'visibility' => 'required|in:intern,vertraulich,externe_freigabe_ausstehend,extern_freigegeben,gesperrt',
-            'file' => 'nullable|file|max:20480',
+            'organization_id' => 'nullable|exists:organizations,id',
+            'release_audience' => 'nullable|in:investor,beirat',
+            'file' => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,csv,txt,png,jpg,jpeg',
         ]);
+
+        // Externe Freigabe erfordert eine Zielbindung, sonst waere das Dokument fuer
+        // saemtliche externen Nutzer sichtbar (Medical Data Firewall, default-deny).
+        if ($data['visibility'] === 'extern_freigegeben'
+            && empty($data['organization_id']) && empty($data['release_audience'])
+            && $data['category'] !== 'board_pack') {
+            return back()->withErrors([
+                'visibility' => 'Externe Freigabe erfordert eine Zielbindung: Organisation, Zielgruppe (Investor/Beirat) oder Kategorie Board Pack.',
+            ])->withInput();
+        }
 
         $path = null;
         if ($request->hasFile('file')) {
@@ -37,6 +50,9 @@ class DocumentController extends Controller
             'title' => $data['title'],
             'category' => $data['category'],
             'visibility' => $data['visibility'],
+            'related_type' => ! empty($data['organization_id']) ? Organization::class : null,
+            'related_id' => $data['organization_id'] ?? null,
+            'release_audience' => $data['release_audience'] ?? null,
             'storage_path' => $path,
             'owner_id' => $request->user()->id,
         ]);

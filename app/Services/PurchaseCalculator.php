@@ -36,13 +36,19 @@ class PurchaseCalculator
         // Gebuehr und erwarteter Zins mindern die sofortige Auszahlung, nicht den Nominalbetrag.
         $immediatePayout = round($immediatePayout - $fee - $expectedInterest, 2);
 
+        // Negative Auszahlung ist ein Konditionsfehler (Gebuehr + Zins uebersteigen die
+        // Bevorschussung). Frueh ablehnen statt still auf 0 klemmen — sonst entsteht
+        // bei der Zweitfreigabe eine unausgeglichene, unbuchbare Journalbuchung.
+        abort_if($immediatePayout < 0, 422,
+            'Die Vertragskonditionen ergeben eine negative Sofortauszahlung. Bitte Vertrag (Gebühr, Zins, Bevorschussung) prüfen.');
+
         return Purchase::create([
             'tenant_id' => TenantContext::id(),
             'receivable_id' => $receivable->id,
             'nominal_amount' => $nominal,
             'purchasable_amount' => $purchasable,
             'advance_rate_percent' => $advanceRate,
-            'immediate_payout_amount' => max(0, $immediatePayout),
+            'immediate_payout_amount' => $immediatePayout,
             'reserve_amount' => $reserve,
             'factoring_fee_amount' => $fee,
             'expected_interest_amount' => $expectedInterest,

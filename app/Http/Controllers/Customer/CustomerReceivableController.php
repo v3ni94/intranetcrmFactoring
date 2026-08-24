@@ -9,6 +9,7 @@ use App\Support\AuditLogger;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CustomerReceivableController extends Controller
 {
@@ -37,7 +38,10 @@ class CustomerReceivableController extends Controller
             'invoice_amount' => 'required|numeric|min:0.01',
         ]);
 
-        $contract = Contract::findOrFail($data['contract_id']);
+        // Nur eigene, aktive Vertraege duerfen referenziert werden (kein IDOR auf fremde Konditionen).
+        $contract = Contract::where('organization_id', $request->user()->customer_org_id)
+            ->where('status', 'aktiv')
+            ->findOrFail($data['contract_id']);
         $nominal = (float) $data['invoice_amount'];
         $advanceRate = (float) $contract->advance_rate_percent;
         $immediatePayout = round($nominal * $advanceRate / 100, 2);
@@ -59,15 +63,21 @@ class CustomerReceivableController extends Controller
     {
         $data = $request->validate([
             'contract_id' => 'required|exists:contracts,id',
-            'invoice_number' => 'required|string|max:100',
+            'invoice_number' => [
+                'required', 'string', 'max:100',
+                Rule::unique('receivables', 'invoice_number')->where('organization_id', $request->user()->customer_org_id),
+            ],
             'invoice_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:invoice_date',
             'invoice_amount' => 'required|numeric|min:0.01',
             'debtor_pseudonym_id' => 'nullable|string|max:100',
         ]);
 
-        $contract = Contract::findOrFail($data['contract_id']);
         $orgId = $request->user()->customer_org_id;
+        // Nur eigene, aktive Vertraege duerfen referenziert werden (kein IDOR auf fremde Konditionen).
+        $contract = Contract::where('organization_id', $orgId)
+            ->where('status', 'aktiv')
+            ->findOrFail($data['contract_id']);
 
         $receivable = Receivable::create([
             'tenant_id' => TenantContext::id(),

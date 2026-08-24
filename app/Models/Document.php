@@ -40,8 +40,10 @@ class Document extends Model
 
     /**
      * Erzwingt die Dokumentsichtbarkeit nach Rolle (Medical Data Firewall, Abschnitt 16.2).
-     * Interne Rollen sehen alles; Kunde/Investor/Beirat ausschliesslich extern freigegebene
-     * Dokumente, Kunde zusaetzlich nur eigene organisationsbezogene Dokumente.
+     * Interne Rollen sehen alles. Externe Rollen strikt default-deny: Kunde sieht nur
+     * extern freigegebene Dokumente der eigenen Organisation; Investor/Beirat nur
+     * Board-Pack-Dokumente bzw. explizit fuer ihre Zielgruppe freigegebene Dokumente.
+     * Abgelaufene Freigaben (release_expires_at) sind fuer Externe nicht mehr sichtbar.
      */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
@@ -51,13 +53,23 @@ class Document extends Model
             return $query;
         }
 
-        return $query->where('visibility', 'extern_freigegeben')
-            ->where(function (Builder $q) use ($user) {
-                $q->where(function (Builder $q2) {
-                    $q2->whereNull('related_type')->orWhere('related_type', '!=', Organization::class);
-                })->orWhere(function (Builder $q2) use ($user) {
-                    $q2->where('related_type', Organization::class)->where('related_id', $user->customer_org_id);
-                });
+        $query->where('visibility', 'extern_freigegeben')
+            ->where(function (Builder $q) {
+                $q->whereNull('release_expires_at')->orWhere('release_expires_at', '>=', now()->startOfDay());
             });
+
+        if (array_intersect($roles, ['kunde_admin', 'kunde_sachbearbeitung'])) {
+            return $query->where('related_type', Organization::class)
+                ->where('related_id', $user->customer_org_id ?? 0);
+        }
+
+        $audiences = array_values(array_intersect($roles, ['investor', 'beirat']));
+
+        return $query->where(function (Builder $q) use ($audiences) {
+            $q->where('category', 'board_pack');
+            if ($audiences !== []) {
+                $q->orWhereIn('release_audience', $audiences);
+            }
+        });
     }
 }

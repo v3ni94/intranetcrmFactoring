@@ -86,6 +86,22 @@ class MedicalDataFirewallTest extends TestCase
         $response->assertDontSee('Fremder Vertrag');
     }
 
+    public function test_kunde_does_not_see_unbound_externally_released_documents(): void
+    {
+        $ownOrg = Organization::create(['tenant_id' => $this->tenantId, 'org_type' => 'customer', 'name' => 'Eigene Praxis', 'customer_status' => 'Aktiv', 'is_demo' => true]);
+
+        // Extern freigegeben, aber ohne Organisationsbindung: default-deny fuer Kunden,
+        // sonst waere jedes ungebundene Kundendokument fuer ALLE Kunden sichtbar.
+        Document::create(['tenant_id' => $this->tenantId, 'title' => 'Ungebundenes Kundendokument', 'category' => 'rechnung', 'visibility' => 'extern_freigegeben']);
+
+        $kunde = User::where('email', 'demo.kunde_admin@aurevia-factoring.de')->firstOrFail();
+        $kunde->update(['customer_org_id' => $ownOrg->id]);
+
+        $response = $this->actingAs($kunde)->get(route('documents.index'));
+        $response->assertOk();
+        $response->assertDontSee('Ungebundenes Kundendokument');
+    }
+
     public function test_kunde_and_investor_cannot_upload_documents(): void
     {
         foreach (['demo.investor', 'demo.kunde_admin'] as $slug) {

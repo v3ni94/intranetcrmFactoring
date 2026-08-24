@@ -11,6 +11,7 @@ use App\Services\SepaExportService;
 use App\Support\AuditLogger;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class PayoutBatchController extends Controller
@@ -73,23 +74,32 @@ class PayoutBatchController extends Controller
 
     public function approveSecond(Request $request, PayoutBatch $batch, SepaExportService $sepa, BankFileAdapter $bankAdapter)
     {
-        abort_unless($batch->status === 'freigegeben_1', 422, 'Batch benötigt zunächst eine erste Freigabe.');
-        abort_if($batch->approved_by_first === $request->user()->id, 403, 'Vier-Augen-Prinzip: Zweitfreigabe durch eine andere Person erforderlich.');
+        $reference = DB::transaction(function () use ($request, $batch, $sepa) {
+            // Zeilensperre + erneute Statuspruefung gegen parallele Doppelfreigabe.
+            $batch = PayoutBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
 
-        $reference = $sepa->exportPain001($batch);
+            abort_unless($batch->status === 'freigegeben_1', 422, 'Batch benötigt zunächst eine erste Freigabe.');
+            abort_if($batch->approved_by_first === $request->user()->id, 403, 'Vier-Augen-Prinzip: Zweitfreigabe durch eine andere Person erforderlich.');
 
-        $batch->update([
-            'status' => 'angewiesen',
-            'approved_by_second' => $request->user()->id,
-            'sepa_export_reference' => $reference,
-            'executed_at' => now(),
-        ]);
+            $reference = $sepa->exportPain001($batch);
 
-        $batch->payouts()->update(['status' => 'angewiesen']);
-        $batch->payouts->each(fn ($p) => $p->purchase->receivable->update(['status' => 'zahlung_angewiesen']));
+            $batch->update([
+                'status' => 'angewiesen',
+                'approved_by_second' => $request->user()->id,
+                'sepa_export_reference' => $reference,
+                'executed_at' => now(),
+            ]);
 
-        AuditLogger::log('approve', PayoutBatch::class, $batch->id, [], ['status' => $batch->status, 'sepa' => $reference]);
-        $bankAdapter->logSepaExport($batch, $reference);
+            $batch->payouts()->update(['status' => 'angewiesen']);
+            $batch->load('payouts.purchase.receivable');
+            $batch->payouts->each(fn ($p) => $p->purchase->receivable->update(['status' => 'zahlung_angewiesen']));
+
+            AuditLogger::log('approve', PayoutBatch::class, $batch->id, [], ['status' => $batch->status, 'sepa' => $reference]);
+
+            return $reference;
+        });
+
+        $bankAdapter->logSepaExport($batch->refresh(), $reference);
 
         return back()->with('status', "Zweite Freigabe erteilt. SEPA-Demo-Datei erzeugt: {$reference}");
     }
@@ -98,20 +108,26 @@ class PayoutBatchController extends Controller
     {
         abort_unless($batch->status === 'angewiesen', 422, 'Batch ist noch nicht angewiesen.');
 
-        $batch->payouts->each(function ($payout) use ($journal, $request) {
-            $payout->update(['status' => 'bestaetigt', 'confirmed_at' => now()]);
-            $payout->purchase->receivable->update(['status' => 'ausgezahlt']);
+        // Transaktional: Zahlungsbestaetigung, Statuswechsel und Journalbuchungen
+        // werden nur gemeinsam wirksam. Eager Loading vermeidet N+1 je Payout.
+        DB::transaction(function () use ($request, $batch, $journal) {
+            $batch->load('payouts.purchase.receivable');
 
-            $journal->post('auszahlung', [
-                ['account' => '2100', 'debit' => (float) $payout->amount, 'organization_id' => $payout->organization_id],
-                ['account' => '1200', 'credit' => (float) $payout->amount, 'organization_id' => $payout->organization_id],
-            ], get_class($payout), $payout->id, $request->user()->id);
+            $batch->payouts->each(function ($payout) use ($journal, $request) {
+                $payout->update(['status' => 'bestaetigt', 'confirmed_at' => now()]);
+                $payout->purchase->receivable->update(['status' => 'ausgezahlt']);
+
+                $journal->post('auszahlung', [
+                    ['account' => '2100', 'debit' => (float) $payout->amount, 'organization_id' => $payout->organization_id],
+                    ['account' => '1200', 'credit' => (float) $payout->amount, 'organization_id' => $payout->organization_id],
+                ], get_class($payout), $payout->id, $request->user()->id);
+            });
+
+            $batch->bankAccount->decrement('balance_amount', $batch->total_amount);
+            $batch->update(['status' => 'bestaetigt']);
+
+            AuditLogger::log('update', PayoutBatch::class, $batch->id, [], ['status' => 'bestaetigt'], 'Bankbestätigung (Demo) erhalten');
         });
-
-        $batch->bankAccount->decrement('balance_amount', $batch->total_amount);
-        $batch->update(['status' => 'bestaetigt']);
-
-        AuditLogger::log('update', PayoutBatch::class, $batch->id, [], ['status' => 'bestaetigt'], 'Bankbestätigung (Demo) erhalten');
 
         return back()->with('status', 'Auszahlung bestätigt (Demo-Banking).');
     }

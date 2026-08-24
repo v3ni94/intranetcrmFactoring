@@ -80,6 +80,15 @@ class ReceivableController extends Controller
 
     public function reject(Request $request, Receivable $receivable)
     {
+        // Nur Forderungen im Pruefprozess sind ablehnbar. Angekaufte, ausgezahlte
+        // oder abgerechnete Forderungen wuerden sonst still aus Buchhaltung und
+        // Limiten "verschwinden" (illegale Statustransition).
+        abort_unless(
+            in_array($receivable->status, ['eingereicht', 'formale_pruefung', 'risiko_limitpruefung', 'rueckfrage', 'freigegeben'], true),
+            422,
+            'Nur Forderungen im Prüfprozess können abgelehnt werden.'
+        );
+
         $data = $request->validate(['reason' => 'required|string|max:500']);
         $receivable->update(['status' => 'abgelehnt', 'rejection_reason' => $data['reason'], 'reviewed_by' => $request->user()->id]);
 

@@ -12,14 +12,23 @@ use Illuminate\Support\Collection;
  */
 class PaymentMatcher
 {
-    private const OPEN_RECEIVABLE_STATUSES = ['zur_auszahlung', 'zahlung_angewiesen', 'ausgezahlt', 'teilbezahlt', 'ueberfaellig'];
+    public const OPEN_RECEIVABLE_STATUSES = ['zur_auszahlung', 'zahlung_angewiesen', 'ausgezahlt', 'teilbezahlt', 'ueberfaellig'];
+
+    /**
+     * Offene Forderungen einmal laden und bei mehreren suggest()-Aufrufen
+     * wiederverwenden (sonst ein Full-Table-Load pro Kontobewegung).
+     */
+    public function openReceivables(): Collection
+    {
+        return Receivable::whereIn('status', self::OPEN_RECEIVABLE_STATUSES)->get();
+    }
 
     /**
      * @return array{receivable: ?Receivable, confidence: float, reason: string}
      */
-    public function suggest(BankTransaction $transaction): array
+    public function suggest(BankTransaction $transaction, ?Collection $candidates = null): array
     {
-        $candidates = Receivable::whereIn('status', self::OPEN_RECEIVABLE_STATUSES)->get();
+        $candidates ??= $this->openReceivables();
 
         $exactAmount = $candidates->first(fn (Receivable $r) => (float) $r->invoice_amount === round((float) $transaction->amount, 2));
         if ($exactAmount) {
