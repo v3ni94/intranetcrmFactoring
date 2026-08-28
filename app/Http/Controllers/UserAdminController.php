@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeUserMail;
 use App\Models\Organization;
 use App\Models\User;
 use App\Support\AuditLogger;
@@ -9,6 +10,8 @@ use App\Support\RoleCatalog;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -57,7 +60,8 @@ class UserAdminController extends Controller
             return back()->withErrors(['role' => 'Diese Rolle kann nur durch einen Superadmin vergeben werden.'])->withInput();
         }
 
-        // Startpasswort wird generiert und genau einmal angezeigt.
+        // Zufaelliges Startpasswort; der Nutzer setzt sein eigenes ueber den
+        // per E-Mail versendeten Setz-Link (kein Klartext-Passwort per Mail).
         $initialPassword = Str::password(16);
 
         $user = User::create([
@@ -75,9 +79,37 @@ class UserAdminController extends Controller
             'email' => $user->email, 'role' => $data['role'], 'customer_org_id' => $user->customer_org_id,
         ], 'Benutzer angelegt');
 
+        if ($this->sendWelcomeMail($user)) {
+            return redirect()->route('users.index')
+                ->with('status', "Benutzer {$user->email} angelegt. Die Zugangsdaten (Passwort-Setz-Link) wurden per E-Mail versendet.");
+        }
+
+        // Fallback bei fehlgeschlagenem Mailversand (z.B. SMTP nicht konfiguriert):
+        // Startpasswort einmalig anzeigen, damit der Zugang uebergeben werden kann.
         return redirect()->route('users.index')
             ->with('created_user', ['email' => $user->email, 'password' => $initialPassword])
-            ->with('status', "Benutzer {$user->email} angelegt.");
+            ->with('status', "Benutzer {$user->email} angelegt. E-Mail-Versand nicht möglich — Startpasswort wird einmalig angezeigt.");
+    }
+
+    /**
+     * Willkommens-/Reset-Mail mit zeitlich begrenztem Passwort-Setz-Link.
+     * Liefert false, wenn der Versand fehlschlaegt (Fallback: Einmal-Anzeige).
+     */
+    private function sendWelcomeMail(User $user, bool $isReset = false): bool
+    {
+        try {
+            $token = Password::broker()->createToken($user);
+            $url = route('password.reset', ['token' => $token]).'?email='.urlencode($user->email);
+
+            Mail::to($user->email)
+                ->send(new WelcomeUserMail($user, $url, $isReset));
+
+            return true;
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
+        }
     }
 
     public function toggleActive(Request $request, User $user)
@@ -105,8 +137,12 @@ class UserAdminController extends Controller
 
         AuditLogger::log('update', User::class, $user->id, [], [], 'Passwort durch Administrator zurueckgesetzt');
 
+        if ($this->sendWelcomeMail($user, isReset: true)) {
+            return back()->with('status', "Passwort-Setz-Link per E-Mail an {$user->email} versendet.");
+        }
+
         return back()
             ->with('created_user', ['email' => $user->email, 'password' => $initialPassword])
-            ->with('status', "Neues Startpasswort für {$user->email} erzeugt.");
+            ->with('status', "E-Mail-Versand nicht möglich — neues Startpasswort für {$user->email} wird einmalig angezeigt.");
     }
 }

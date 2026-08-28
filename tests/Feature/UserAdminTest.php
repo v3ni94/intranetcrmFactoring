@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Mail\WelcomeUserMail;
 use App\Models\Organization;
 use App\Models\Tenant;
 use App\Models\User;
 use Database\Seeders\DemoUserSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 /**
@@ -31,8 +34,10 @@ class UserAdminTest extends TestCase
         $this->admin = User::where('email', 'demo.systemadministration@aurevia-factoring.de')->firstOrFail();
     }
 
-    public function test_admin_can_create_internal_user(): void
+    public function test_admin_can_create_internal_user_and_welcome_mail_is_sent(): void
     {
+        Mail::fake();
+
         $response = $this->actingAs($this->admin)->post(route('users.store'), [
             'name' => 'Neue Mitarbeiterin',
             'email' => 'neu@aurevia-factoring.de',
@@ -40,12 +45,41 @@ class UserAdminTest extends TestCase
         ]);
 
         $response->assertRedirect(route('users.index'));
-        $response->assertSessionHas('created_user');
+        // Zugangsdaten gehen per Mail (Passwort-Setz-Link), KEIN Passwort im UI.
+        $response->assertSessionMissing('created_user');
+        Mail::assertSent(WelcomeUserMail::class, fn ($mail) => $mail->hasTo('neu@aurevia-factoring.de'));
 
         $user = User::where('email', 'neu@aurevia-factoring.de')->firstOrFail();
         $this->assertTrue($user->hasRole('operations'));
         $this->assertTrue($user->is_active);
         $this->assertNull($user->customer_org_id);
+    }
+
+    public function test_password_set_link_from_welcome_mail_works(): void
+    {
+        // Benutzer anlegen (array-Mailer: Versand gelingt, Link entsteht)
+        $this->actingAs($this->admin)->post(route('users.store'), [
+            'name' => 'Link Nutzerin',
+            'email' => 'link@aurevia-factoring.de',
+            'role' => 'kunde_admin',
+            'customer_org_id' => Organization::create([
+                'tenant_id' => $this->tenantId, 'org_type' => 'customer', 'name' => 'Linkpraxis', 'customer_status' => 'Aktiv',
+            ])->id,
+        ])->assertRedirect();
+
+        // Token direkt erzeugen (entspricht dem Link in der Mail) und Passwort setzen
+        $user = User::where('email', 'link@aurevia-factoring.de')->firstOrFail();
+        $token = Password::broker()->createToken($user);
+
+        $this->post('/reset-password', [
+            'token' => $token,
+            'email' => $user->email,
+            'password' => 'Mein-Neues-Passwort-1!',
+            'password_confirmation' => 'Mein-Neues-Passwort-1!',
+        ])->assertRedirect();
+
+        $this->post('/login', ['email' => $user->email, 'password' => 'Mein-Neues-Passwort-1!']);
+        $this->assertAuthenticated();
     }
 
     public function test_customer_user_requires_organization_and_gets_bound_to_it(): void

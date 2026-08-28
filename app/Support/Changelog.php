@@ -11,6 +11,15 @@ class Changelog
 {
     public const ENTRIES = [
         [
+            'version' => '3.01',
+            'date' => '29.08.2026 15:30',
+            'author' => 'Timo Müller',
+            'changes' => [
+                'Benutzeranlage und Passwort-Reset versenden die Zugangsdaten per E-Mail: Willkommens-Mail mit zeitlich begrenztem Passwort-Setz-Link (kein Klartext-Passwort per Mail)',
+                'Fallback bei nicht konfiguriertem Mailversand: Startpasswort wird wie bisher einmalig im System angezeigt',
+            ],
+        ],
+        [
             'version' => '3.00',
             'date' => '29.08.2026 14:00',
             'author' => 'Timo Müller',
