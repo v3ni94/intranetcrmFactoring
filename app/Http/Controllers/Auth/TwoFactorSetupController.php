@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -31,9 +35,20 @@ class TwoFactorSetupController extends Controller
             $user->two_factor_secret
         );
 
+        // QR-Code als Inline-SVG (serverseitig, keine externen Dienste) —
+        // die meisten Nutzer scannen lieber, der manuelle Schluessel bleibt
+        // als Alternative sichtbar.
+        $qrSvg = (new Writer(
+            new ImageRenderer(
+                new RendererStyle(220, 1),
+                new SvgImageBackEnd
+            )
+        ))->writeString($otpauthUrl);
+
         return view('auth.two-factor-setup', [
             'secret' => $user->two_factor_secret,
             'otpauthUrl' => $otpauthUrl,
+            'qrSvg' => $qrSvg,
             'confirmed' => $user->hasConfirmedTwoFactor(),
         ]);
     }

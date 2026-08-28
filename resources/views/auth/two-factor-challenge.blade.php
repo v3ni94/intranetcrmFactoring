@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <h2 class="text-lg font-semibold text-aurevia-navy mb-1">Zwei-Faktor-Bestätigung</h2>
+    <h2 class="text-lg font-semibold text-aurevia-navy mb-1">{{ __('Zwei-Faktor-Bestätigung') }}</h2>
     <p class="text-sm text-aurevia-label-gray mb-4">
         Bitte geben Sie den 6-stelligen Code aus Ihrer Authenticator-App ein, oder alternativ
         einen Ihrer Wiederherstellungscodes.
@@ -17,7 +17,7 @@
         <x-input-label for="code" value="Code" />
         <x-text-input id="code" name="code" class="w-full" :value="$demoCode" autofocus required />
         <x-input-error :messages="$errors->get('code')" />
-        <x-primary-button>Bestätigen</x-primary-button>
+        <x-primary-button>{{ __('Bestätigen') }}</x-primary-button>
     </form>
 
     <a href="{{ route('login') }}" class="block mt-6 pt-4 border-t border-aurevia-mist text-sm text-aurevia-label-gray hover:text-aurevia-navy underline">

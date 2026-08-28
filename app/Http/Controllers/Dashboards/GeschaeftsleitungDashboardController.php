@@ -32,10 +32,20 @@ class GeschaeftsleitungDashboardController extends Controller
         $scenarioOrder = ['konservativ' => 0, 'base' => 1, 'wachstum' => 2, 'stress' => 3];
         $scenarios = FinancialScenario::all()->sortBy(fn ($s) => $scenarioOrder[$s->scenario_key] ?? 99)->values();
 
+        // Ankaufsvolumen je Monat (letzte 6 Monate) fuer das Balkendiagramm.
+        $monthlyPurchases = collect(range(5, 0))->map(function (int $monthsAgo) {
+            $start = now()->subMonths($monthsAgo)->startOfMonth();
+
+            return [
+                'label' => $start->format('m/Y'),
+                'value' => (float) Purchase::whereBetween('purchased_at', [$start, $start->copy()->endOfMonth()])->sum('nominal_amount'),
+            ];
+        });
+
         return view('dashboards.geschaeftsleitung', compact(
             'purchasedMonth', 'purchasedYtd', 'purchasedTwelveMonths', 'outstandingPortfolio',
             'grossRevenue', 'refinancingCost', 'contributionMargin', 'dilution', 'overdueRatio',
-            'top10', 'dso', 'ageing', 'scenarios'
+            'top10', 'dso', 'ageing', 'scenarios', 'monthlyPurchases'
         ));
     }
 }

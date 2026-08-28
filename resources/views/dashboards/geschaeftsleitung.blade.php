@@ -16,15 +16,25 @@
     </div>
 
     <div class="bg-white rounded-lg border border-aurevia-mist p-4 mb-6">
-        <h2 class="text-sm font-semibold text-aurevia-navy mb-3">Altersstruktur des Portfolios</h2>
-        <div class="grid grid-cols-4 gap-4 text-sm">
+        <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Altersstruktur des Portfolios') }}</h2>
+        <x-bar-chart chart-id="ageingChart"
+            :labels="collect($ageing)->keys()->map(fn ($b) => $b.' '.__('Tage'))->all()"
+            :values="array_values($ageing)" />
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm mt-4">
             @foreach($ageing as $bucket => $amount)
                 <div class="text-center">
-                    <div class="text-aurevia-label-gray text-[11px] uppercase">{{ $bucket }} Tage</div>
+                    <div class="text-aurevia-label-gray text-[11px] uppercase">{{ $bucket }} {{ __('Tage') }}</div>
                     <div class="text-lg font-semibold text-aurevia-navy">{{ eur($amount) }}</div>
                 </div>
             @endforeach
         </div>
+    </div>
+
+    <div class="bg-white rounded-lg border border-aurevia-mist p-4 mb-6">
+        <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Ankaufsvolumen (letzte 6 Monate)') }}</h2>
+        <x-bar-chart chart-id="purchasesChart"
+            :labels="$monthlyPurchases->pluck('label')->all()"
+            :values="$monthlyPurchases->pluck('value')->all()" />
     </div>
 
     <div class="bg-white rounded-lg border border-aurevia-mist p-4">

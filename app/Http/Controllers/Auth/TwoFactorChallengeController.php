@@ -53,6 +53,13 @@ class TwoFactorChallengeController extends Controller
 
         abort_unless($user, 419, 'Sitzung abgelaufen, bitte erneut anmelden.');
 
+        // Zwischen Erstfaktor und Challenge deaktivierte Konten abweisen.
+        if (! $user->is_active) {
+            $request->session()->forget(['mfa_challenge_user_id', 'mfa_challenge_remember']);
+
+            return redirect()->route('login')->withErrors(['email' => 'Dieses Konto ist deaktiviert.']);
+        }
+
         $throttleKey = 'mfa:'.$user->id.'|'.$request->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_ATTEMPTS)) {

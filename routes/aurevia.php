@@ -29,6 +29,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RiskController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\Treasury\BankAccountController;
+use App\Http\Controllers\UserAdminController;
 use App\Support\RoleCatalog;
 use Illuminate\Support\Facades\Route;
 
@@ -186,6 +187,15 @@ Route::middleware(['auth'])->group(function () {
     // Integrationen & Schnittstellen-Status (Abschnitt 20)
     Route::middleware('role:systemadministration|geschaeftsleitung|superadmin_demo')
         ->get('/einstellungen/integrationen', [IntegrationController::class, 'index'])->name('integrations.index');
+
+    // Benutzerverwaltung
+    Route::middleware('role:systemadministration|geschaeftsleitung|superadmin_demo')
+        ->prefix('einstellungen/benutzer')->name('users.')->group(function () {
+            Route::get('/', [UserAdminController::class, 'index'])->name('index');
+            Route::post('/', [UserAdminController::class, 'store'])->name('store');
+            Route::post('/{user}/aktiv', [UserAdminController::class, 'toggleActive'])->name('toggle-active');
+            Route::post('/{user}/passwort', [UserAdminController::class, 'resetPassword'])->name('reset-password');
+        });
 
     // Demo-Steuerung (nur Superadmin)
     Route::middleware('role:superadmin_demo')->prefix('demo')->name('demo.')->group(function () {

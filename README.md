@@ -52,7 +52,15 @@ beschriebenen Kern-Prototyp:
     Produktions-Init ohne SSH (`php artisan aurevia:init`), automatische
     Überfälligkeits-Markierung (`aurevia:mark-overdue`, täglich 03:00 Uhr),
     Performance-Fixes (N+1, SQL-Aggregation) und Versionsanzeige im Footer
-8. ✅ Automatisierte Tests (67 Feature-Tests, u. a. Vier-Augen-Prinzip für
+7i. ✅ v2.1: Benutzerverwaltung (Anlegen aller 13 Rollen, Kunden-Nutzer mit
+    Organisationsbindung, Startpasswort mit Einmal-Anzeige, Passwort-Reset,
+    Deaktivieren mit Login-Sperre, Audit-Logging), 2FA-Einrichtung mit
+    QR-Code-Scan (serverseitiges SVG) plus manuellem Schlüssel,
+    Sprachumschalter DE/EN oben rechts (Navigation, Login, 2FA und
+    Benutzerverwaltung übersetzt, Modulseiten folgen schrittweise),
+    mobil-optimiertes Layout (Overlay-Navigation, responsive Kopfleiste)
+    und Dashboard-Diagramme (Chart.js: Altersstruktur, Ankaufsvolumen)
+8. ✅ Automatisierte Tests (74 Feature-Tests, u. a. Vier-Augen-Prinzip für
    Ankauf UND Auszahlung, RBAC, Medical-Data-Firewall-Zugriffskontrolle,
    MFA-Erzwingung inkl. Recovery-Codes/Rate-Limit/Replay, Journal-Bilanz,
    Teilzahlungen und Doppelzuordnungs-Schutz, Audit-Ketten-Verifikation,
@@ -198,7 +206,7 @@ Bruttoertrag, Refinanzierungskosten, Deckungsbeitrag, Verwässerungsquote,
 php artisan test
 ```
 
-67 Feature-Tests, u. a.:
+74 Feature-Tests, u. a.:
 
 - `RoleDashboardTest` – jede der 13 Rollen erreicht ihr eigenes, ladbares Dashboard
 - `ReceivableWorkflowTest` – vollständiger Prozess Einreichen → Prüfen →

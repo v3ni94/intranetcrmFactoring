@@ -50,6 +50,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Deaktivierte Konten duerfen sich nicht anmelden (Benutzerverwaltung).
+        if (! Auth::user()->is_active) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Dieses Konto ist deaktiviert. Bitte wenden Sie sich an die Systemadministration.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

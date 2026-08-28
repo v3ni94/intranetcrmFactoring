@@ -4,7 +4,7 @@ return [
     // Anwendungsversion, wird im Footer angezeigt. Schema: MAJOR.MINOR —
     // die erste Zahl steigt bei groesseren Umbauten (z.B. v1.22 -> v2.0),
     // die zweite bei normalen Erweiterungen und Fixes.
-    'version' => '2.0',
+    'version' => '2.1',
 
     // Steuert den DEMO-Banner und die Demo-Steuerung; produktiv auf false setzen.
     'demo_mode' => env('AUREVIA_DEMO_MODE', true),
