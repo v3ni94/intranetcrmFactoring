@@ -32,6 +32,24 @@ class InvestorDashboardController extends Controller
             ->where('event_type', 'zinszahlung')
             ->sum('amount');
 
-        return view('dashboards.investor', compact('org', 'facilities', 'totalCommitment', 'totalDrawn', 'accruedInterest'));
+        // Gesamtkapital der Plattform (alle Investoren) zur Einordnung des eigenen Anteils.
+        $platformCommitment = (float) Facility::whereIn('status', ['aktiv', 'ausgesetzt'])->sum('commitment_amount');
+
+        // Modellrechnung (v3.00): illustrative Anlage-Staffeln auf Basis der eigenen
+        // Zusage (+50%, +100%, +150%) mit kalkulatorischer Monatsmarge. REINE
+        // ILLUSTRATION — keine Zusage, keine Prognose, keine Anlageberatung; die
+        // Kennzeichnung erfolgt sichtbar in der Oberflaeche.
+        $modelMargin = (float) config('aurevia.investor_model_margin_percent');
+        $upsellTiers = $totalCommitment > 0
+            ? collect([0.5, 1.0, 1.5])->map(fn (float $factor) => [
+                'amount' => round((float) $totalCommitment * $factor, -3),
+                'model_monthly' => round((float) $totalCommitment * $factor * $modelMargin / 100, 2),
+            ])->all()
+            : [];
+
+        return view('dashboards.investor', compact(
+            'org', 'facilities', 'totalCommitment', 'totalDrawn', 'accruedInterest',
+            'platformCommitment', 'upsellTiers', 'modelMargin'
+        ));
     }
 }

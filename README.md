@@ -16,7 +16,7 @@ Dieser Durchlauf implementiert den in Abschnitt 25 des Master-Prompts
 beschriebenen Kern-Prototyp:
 
 1. ✅ Informationsarchitektur und Datenmodell (18 Migrationen, ~32 Entitäten)
-2. ✅ Rollen (13), Rechte (Spatie Permission) und Demo-Nutzer je Rolle
+2. ✅ Rollen (14, inkl. Controlling), Rechte (Spatie Permission) und Demo-Nutzer je Rolle
 3. ✅ Aurevia-Designsystem (CI-Farben, Logo-Platzhalter, Login, Navigation)
 4. ✅ Sechs Kern-Dashboards: Kunde, Mitarbeiter, Risiko, Geschäftsleitung, Beirat, Investor
 5. ✅ End-to-End-Forderungsprozess inkl. Vier-Augen-Prinzip, SEPA-Demo-Export, camt-Demo-Import
@@ -60,7 +60,21 @@ beschriebenen Kern-Prototyp:
     Benutzerverwaltung übersetzt, Modulseiten folgen schrittweise),
     mobil-optimiertes Layout (Overlay-Navigation, responsive Kopfleiste)
     und Dashboard-Diagramme (Chart.js: Altersstruktur, Ankaufsvolumen)
-8. ✅ Automatisierte Tests (74 Feature-Tests, u. a. Vier-Augen-Prinzip für
+7j. ✅ v3.00 (bankennahe Ausbaustufe): internes Rating AAA–C für Kunden und
+    Investoren mit ratingabhängigem Gebührenaufschlag beim Ankauf,
+    Branchensegmente Medizin + B2B/B2C-Kennzeichnung, Markt/Marktfolge-
+    Eskalation bei Ablehnungen (Zweitvotum Marktfolge → Vorstand, mit
+    Begründungspflicht und Audit), Fazilitäten mit Sonderkündigungsrecht/
+    Kündigungsfrist/Insolvenzfall, Support-Ticketsystem, Rolle Controlling
+    mit Kostenmodul, Investor-Dashboard mit Rendite-Einordnung und
+    gekennzeichneten Anlage-Staffeln (Modellrechnung), Warenkreditversicherung
+    vorbereitet (Klumpenrisiko-Schwelle, Linienfelder, Melde-Adapter),
+    Creditreform/SCHUFA als vorbereitete Adapter, KPI-Report per E-Mail
+    (manuell + Abo täglich/wöchentlich/monatlich), gruppierte Navigation,
+    In-App-FAQ, Changelog-Seite, Footer „Ein Produkt der Müller Holding AG";
+    Dokumentation unter docs/: Benutzerhandbuch, Prozessleitfaden,
+    BaFin-Vorbereitungsdokumentation, Datenschutzkonzept
+8. ✅ Automatisierte Tests (80 Feature-Tests, u. a. Vier-Augen-Prinzip für
    Ankauf UND Auszahlung, RBAC, Medical-Data-Firewall-Zugriffskontrolle,
    MFA-Erzwingung inkl. Recovery-Codes/Rate-Limit/Replay, Journal-Bilanz,
    Teilzahlungen und Doppelzuordnungs-Schutz, Audit-Ketten-Verifikation,
@@ -206,7 +220,7 @@ Bruttoertrag, Refinanzierungskosten, Deckungsbeitrag, Verwässerungsquote,
 php artisan test
 ```
 
-74 Feature-Tests, u. a.:
+80 Feature-Tests, u. a.:
 
 - `RoleDashboardTest` – jede der 13 Rollen erreicht ihr eigenes, ladbares Dashboard
 - `ReceivableWorkflowTest` – vollständiger Prozess Einreichen → Prüfen →

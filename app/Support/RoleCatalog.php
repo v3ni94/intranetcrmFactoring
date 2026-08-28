@@ -15,6 +15,7 @@ class RoleCatalog
         'debitorenbuchhaltung' => 'Debitorenbuchhaltung / Collections',
         'treasury_finance' => 'Treasury / Finance',
         'compliance' => 'Compliance / Geldwäsche / Datenschutz',
+        'controlling' => 'Controlling / Kostenrechnung',
         'geschaeftsleitung' => 'Geschäftsleitung / Vorstand',
         'systemadministration' => 'Systemadministration',
         'superadmin_demo' => 'Superadmin (Demo-Steuerung)',
@@ -24,7 +25,7 @@ class RoleCatalog
 
     public const INTERNAL_ROLES = [
         'vertrieb_crm', 'operations', 'kredit_risiko', 'debitorenbuchhaltung',
-        'treasury_finance', 'compliance', 'geschaeftsleitung', 'systemadministration', 'superadmin_demo',
+        'treasury_finance', 'compliance', 'controlling', 'geschaeftsleitung', 'systemadministration', 'superadmin_demo',
     ];
 
     /** Rollen, deren Startseite eines der sechs Kern-Dashboards ist. */
@@ -39,6 +40,7 @@ class RoleCatalog
         'debitorenbuchhaltung' => 'dashboard.mitarbeiter',
         'treasury_finance' => 'dashboard.mitarbeiter',
         'compliance' => 'dashboard.risiko',
+        'controlling' => 'dashboard.mitarbeiter',
         'geschaeftsleitung' => 'dashboard.geschaeftsleitung',
         'systemadministration' => 'dashboard.mitarbeiter',
         'superadmin_demo' => 'dashboard.geschaeftsleitung',

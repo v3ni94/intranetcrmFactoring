@@ -26,6 +26,7 @@ use App\Models\JournalEntry;
 use App\Models\JournalLine;
 use App\Models\KycCase;
 use App\Models\Lead;
+use App\Models\OperatingCost;
 use App\Models\Opportunity;
 use App\Models\Organization;
 use App\Models\OutsourcingRegistration;
@@ -36,9 +37,12 @@ use App\Models\ProjectRisk;
 use App\Models\Purchase;
 use App\Models\Receivable;
 use App\Models\RelatedParty;
+use App\Models\ReportSubscription;
 use App\Models\Shareholder;
 use App\Models\Task;
 use App\Models\Tenant;
+use App\Models\Ticket;
+use App\Models\TicketMessage;
 use App\Models\Workstream;
 use Database\Seeders\AureviaDemoDataSeeder;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -52,6 +56,8 @@ class DemoResetService
 {
     /** Reihenfolge beachtet Fremdschluessel: Kinder vor Eltern. */
     private const MODELS_IN_DELETE_ORDER = [
+        TicketMessage::class, Ticket::class,
+        OperatingCost::class, ReportSubscription::class,
         IntegrationEvent::class, IntegrationProvider::class,
         EquityInstrument::class, Shareholder::class, CapTableScenario::class,
         RelatedParty::class, OutsourcingRegistration::class,

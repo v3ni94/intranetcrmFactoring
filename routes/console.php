@@ -15,3 +15,7 @@ Schedule::command('aurevia:backup')->dailyAt('02:30')->onOneServer();
 // Faellige Forderungen taeglich als ueberfaellig markieren (speist Mahnwesen und
 // Overdue-KPIs; ohne diesen Job wuerde der Status in Produktion nie gesetzt).
 Schedule::command('aurevia:mark-overdue')->dailyAt('03:00')->onOneServer();
+
+// Faellige KPI-Report-Abonnements versenden (taeglich/woechentlich/monatlich,
+// Faelligkeit prueft das Abo selbst). Setzt konfigurierte MAIL_*-Daten voraus.
+Schedule::command('aurevia:send-reports')->dailyAt('06:30')->onOneServer();

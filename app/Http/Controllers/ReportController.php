@@ -2,17 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\KpiReportMail;
 use App\Models\JournalLine;
 use App\Models\Receivable;
+use App\Models\ReportSubscription;
 use App\Services\Integrations\DatevExportAdapter;
+use App\Services\KpiReportBuilder;
 use App\Support\AuditLogger;
+use App\Support\TenantContext;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class ReportController extends Controller
 {
     public function index()
     {
-        return view('reports.index');
+        $subscriptions = ReportSubscription::with('creator')->latest('id')->get();
+
+        return view('reports.index', compact('subscriptions'));
+    }
+
+    /**
+     * KPI-Report sofort per E-Mail versenden (v3.00, manueller Versand).
+     */
+    public function sendKpiReport(Request $request, KpiReportBuilder $builder)
+    {
+        $data = $request->validate(['recipient_email' => 'required|email:strict']);
+
+        try {
+            Mail::to($data['recipient_email'])
+                ->send(new KpiReportMail($builder->build(), now()->format('d.m.Y H:i')));
+        } catch (TransportExceptionInterface $e) {
+            report($e);
+
+            return back()->withErrors(['recipient_email' => 'E-Mail-Versand fehlgeschlagen — SMTP-Zugangsdaten in der .env prüfen.']);
+        }
+
+        AuditLogger::log('export', ReportSubscription::class, null, [], [], 'KPI-Report manuell versendet an '.$data['recipient_email']);
+
+        return back()->with('status', 'KPI-Report versendet an '.$data['recipient_email'].'.');
+    }
+
+    /**
+     * Automatischen Report einrichten (taeglich/woechentlich/monatlich).
+     */
+    public function storeSubscription(Request $request)
+    {
+        $data = $request->validate([
+            'recipient_email' => 'required|email:strict',
+            'frequency' => 'required|in:taeglich,woechentlich,monatlich',
+        ]);
+
+        ReportSubscription::create($data + [
+            'tenant_id' => TenantContext::id(),
+            'report_type' => 'kpi_uebersicht',
+            'created_by' => $request->user()->id,
+        ]);
+
+        return back()->with('status', 'Automatischer Report eingerichtet ('.$data['frequency'].').');
+    }
+
+    public function toggleSubscription(Request $request, ReportSubscription $subscription)
+    {
+        $subscription->update(['active' => ! $subscription->active]);
+
+        return back()->with('status', $subscription->active ? 'Report aktiviert.' : 'Report pausiert.');
     }
 
     public function exportReceivables(): StreamedResponse

@@ -8,6 +8,7 @@ use App\Models\KycCase;
 use App\Models\Organization;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Integrations\IntegrationCatalog;
 use App\Support\TenantContext;
 use Database\Seeders\DemoUserSeeder;
 use Database\Seeders\RoleSeeder;
@@ -35,7 +36,7 @@ class IntegrationAdapterTest extends TestCase
 
         $this->actingAs($admin)->get(route('integrations.index'))->assertOk();
 
-        $this->assertSame(11, IntegrationProvider::count());
+        $this->assertSame(count(IntegrationCatalog::PROVIDERS), IntegrationProvider::count());
     }
 
     public function test_kyc_action_logs_integration_event_and_updates_provider_status(): void

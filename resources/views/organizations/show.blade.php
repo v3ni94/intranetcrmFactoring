@@ -10,7 +10,50 @@
                     <div class="text-aurevia-label-gray">Adresse</div><div class="text-right">{{ $organization->street }}, {{ $organization->zip }} {{ $organization->city }}</div>
                     <div class="text-aurevia-label-gray">Onboarding-Status</div><div class="text-right">{{ $organization->customer_status }}</div>
                     <div class="text-aurevia-label-gray">Risikoklasse</div><div class="text-right capitalize">{{ $organization->risk_class ?? '–' }}</div>
+                    <div class="text-aurevia-label-gray">Rating</div>
+                    <div class="text-right">
+                        @if($organization->rating)
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-aurevia-navy text-white">{{ $organization->rating }}</span>
+                            <span class="text-xs text-aurevia-label-gray">({{ $organization->rating_points }} P., Aufschlag +{{ number_format(\App\Support\RatingCatalog::feeSurchargePercent($organization->rating), 1, ',', '.') }} %-Pkt.)</span>
+                        @else
+                            <span class="text-xs text-aurevia-label-gray">ohne Rating</span>
+                        @endif
+                    </div>
+                    <div class="text-aurevia-label-gray">Branche</div><div class="text-right">{{ \App\Support\RatingCatalog::SEGMENTS[$organization->segment] ?? '–' }}</div>
+                    <div class="text-aurevia-label-gray">Kundentyp</div><div class="text-right uppercase">{{ $organization->customer_type }}</div>
                 </div>
+
+                {{-- Rating & Einstufung pflegen (v3.00) --}}
+                <form method="POST" action="{{ route('organizations.update-rating', $organization) }}"
+                      class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 pt-4 border-t border-aurevia-mist/60 text-sm items-end">
+                    @csrf
+                    <div>
+                        <label class="block text-[11px] uppercase text-aurevia-label-gray mb-1">Punkte (0–100)</label>
+                        <input type="number" name="rating_points" min="0" max="100" value="{{ $organization->rating_points }}" required class="w-full rounded-md border-aurevia-mist text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase text-aurevia-label-gray mb-1">Branche</label>
+                        <select name="segment" class="w-full rounded-md border-aurevia-mist text-sm">
+                            <option value="">–</option>
+                            @foreach(\App\Support\RatingCatalog::SEGMENTS as $key => $label)
+                                <option value="{{ $key }}" @selected($organization->segment === $key)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase text-aurevia-label-gray mb-1">Kundentyp</label>
+                        <select name="customer_type" class="w-full rounded-md border-aurevia-mist text-sm">
+                            <option value="b2b" @selected($organization->customer_type === 'b2b')>B2B (gewerblich)</option>
+                            <option value="b2c" @selected($organization->customer_type === 'b2c')>B2C (Verbraucher)</option>
+                        </select>
+                    </div>
+                    <button class="px-3 py-2 bg-aurevia-navy text-white rounded-md text-sm hover:bg-aurevia-navy/90">Rating speichern</button>
+                </form>
+                @if($organization->customer_type === 'b2c')
+                    <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mt-2">
+                        B2C: Verbraucher als Rechnungsempfänger — Abtretungsinformation und Verbraucherschutzanforderungen beachten (siehe Hilfe & FAQ, rechtlich prüfen lassen).
+                    </p>
+                @endif
                 <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-aurevia-mist/60">
                     <form method="POST" action="{{ route('organizations.run-kyc', $organization) }}">
                         @csrf

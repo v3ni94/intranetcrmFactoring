@@ -35,11 +35,36 @@
                             <button class="text-sm text-white bg-aurevia-navy px-3 py-1.5 rounded-md hover:bg-aurevia-navy/90">Risiko-/Limitprüfung ausführen</button>
                         </form>
                     @endif
-                    @if(!in_array($receivable->status, ['abgelehnt', 'zurueckgezogen', 'bezahlt', 'abgerechnet']))
+                    @if(!in_array($receivable->status, ['abgelehnt', 'zurueckgezogen', 'bezahlt', 'abgerechnet', 'zweitvotum_marktfolge', 'zweitvotum_vorstand']))
                         <form method="POST" action="{{ route('receivables.reject', $receivable) }}" onsubmit="return confirm('Forderung wirklich ablehnen?');">
                             @csrf
                             <input type="hidden" name="reason" value="Manuell abgelehnt durch Sachbearbeitung">
                             <button class="text-sm text-red-700 border border-red-300 px-3 py-1.5 rounded-md hover:bg-red-50">Ablehnen</button>
+                        </form>
+                    @endif
+
+                    {{-- Eskalation nach Markt/Marktfolge-Prinzip (MaRisk, v3.00) --}}
+                    @if(in_array($receivable->status, ['abgelehnt', 'rueckfrage']))
+                        <form method="POST" action="{{ route('receivables.request-second-vote', $receivable) }}" class="flex items-center gap-2">
+                            @csrf
+                            <input name="reason" required placeholder="Begründung für Zweitvotum" class="text-sm rounded-md border-aurevia-mist" />
+                            <button class="text-sm text-aurevia-navy border border-aurevia-navy px-3 py-1.5 rounded-md hover:bg-aurevia-pearl whitespace-nowrap">Zweitvotum Marktfolge anfordern</button>
+                        </form>
+                    @endif
+                    @if($receivable->status === 'zweitvotum_marktfolge' && auth()->user()->hasAnyRole(['kredit_risiko', 'geschaeftsleitung', 'superadmin_demo']))
+                        <form method="POST" action="{{ route('receivables.market-followup-vote', $receivable) }}" class="flex flex-wrap items-center gap-2">
+                            @csrf
+                            <input name="reason" required placeholder="Begründung (Pflicht)" class="text-sm rounded-md border-aurevia-mist" />
+                            <button name="decision" value="freigeben" class="text-sm text-white bg-emerald-700 px-3 py-1.5 rounded-md hover:bg-emerald-800">Marktfolge: Freigeben</button>
+                            <button name="decision" value="ablehnen" class="text-sm text-red-700 border border-red-300 px-3 py-1.5 rounded-md hover:bg-red-50">Marktfolge: Ablehnen → Vorstand</button>
+                        </form>
+                    @endif
+                    @if($receivable->status === 'zweitvotum_vorstand' && auth()->user()->hasAnyRole(['geschaeftsleitung', 'superadmin_demo']))
+                        <form method="POST" action="{{ route('receivables.board-vote', $receivable) }}" class="flex flex-wrap items-center gap-2">
+                            @csrf
+                            <input name="reason" required placeholder="Begründung (Pflicht)" class="text-sm rounded-md border-aurevia-mist" />
+                            <button name="decision" value="freigeben" class="text-sm text-white bg-emerald-700 px-3 py-1.5 rounded-md hover:bg-emerald-800">Vorstand: Freigeben</button>
+                            <button name="decision" value="ablehnen" class="text-sm text-white bg-red-700 px-3 py-1.5 rounded-md hover:bg-red-800">Vorstand: Endgültig ablehnen</button>
                         </form>
                     @endif
                     @if($receivable->status === 'freigegeben' && !$receivable->purchase)

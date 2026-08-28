@@ -35,6 +35,44 @@
         </table>
     </div>
 
+    {{-- Rendite-Einordnung und Anlage-Staffeln (v3.00) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white rounded-lg border border-aurevia-mist p-4">
+            <h2 class="text-sm font-semibold text-aurevia-navy mb-3">Ihre Kapitalbeziehung im Überblick</h2>
+            <div class="grid grid-cols-2 gap-2 text-sm">
+                <div class="text-aurevia-label-gray">Erhaltene Zinszahlungen (kumuliert)</div><div class="text-right font-medium">{{ eur($accruedInterest) }}</div>
+                <div class="text-aurevia-label-gray">Gesamtkapital der Plattform</div><div class="text-right font-medium">{{ eur($platformCommitment) }}</div>
+                <div class="text-aurevia-label-gray">Ihr Anteil</div><div class="text-right font-medium">{{ $platformCommitment > 0 ? pct(round($totalCommitment / $platformCommitment * 100, 1)) : '–' }}</div>
+            </div>
+        </div>
+        @if($upsellTiers !== [])
+        <div class="bg-white rounded-lg border border-aurevia-gold/60 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-semibold text-aurevia-navy">Mögliche weitere Anlage-Staffeln</h2>
+                <span class="text-[10px] uppercase tracking-wide text-aurevia-gold bg-aurevia-navy px-2 py-0.5 rounded">Modellrechnung — keine Zusage</span>
+            </div>
+            <table class="w-full text-sm">
+                <thead class="text-[11px] uppercase text-aurevia-label-gray">
+                    <tr><th class="text-left pb-2">Zusätzliche Zusage</th><th class="text-right pb-2">Kalkulatorisch mtl. ({{ number_format($modelMargin, 1, ',', '.') }} % Modellmarge)</th></tr>
+                </thead>
+                <tbody>
+                @foreach($upsellTiers as $tier)
+                    <tr class="border-t border-aurevia-mist/60">
+                        <td class="py-1.5">{{ eur($tier['amount']) }}</td>
+                        <td class="py-1.5 text-right">{{ eur($tier['model_monthly']) }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+            <p class="text-[11px] text-aurevia-label-gray mt-3">
+                Reine Modellrechnung auf Basis einer kalkulatorischen Monatsmarge. Keine Prognose, keine Zusage, keine
+                Anlageberatung und kein Angebot. Maßgeblich sind ausschließlich die vertraglichen Vereinbarungen.
+                Bei Interesse sprechen Sie Ihren Ansprechpartner an oder erstellen Sie ein Support-Ticket.
+            </p>
+        </div>
+        @endif
+    </div>
+
     <p class="text-[11px] text-aurevia-label-gray mt-4">
         Detailtiefe gemäß Vertrag: aggregiert / Kundenebene / pseudonymisierte Forderungsebene. Es werden ausschließlich freigegebene
         Kennzahlen angezeigt; Patientendaten werden nicht dargestellt.

@@ -77,5 +77,21 @@
     "Das Startpasswort wird automatisch erzeugt und nach dem Anlegen einmalig angezeigt. Kunden-Nutzer sehen ausschließlich Forderungen und Dokumente ihrer eigenen Organisation.": "The initial password is generated automatically and shown once after creation. Client users only see receivables and documents of their own organisation.",
     "Tage": "days",
     "Ankaufsvolumen (letzte 6 Monate)": "Purchase volume (last 6 months)",
-    "Altersstruktur des Portfolios": "Portfolio ageing structure"
+    "Altersstruktur des Portfolios": "Portfolio ageing structure",
+    "Ein Produkt der Müller Holding AG": "A product of Müller Holding AG",
+    "Kundenportal": "Client portal",
+    "Investorenportal": "Investor portal",
+    "Betrieb": "Operations",
+    "Vertrieb & Kunden": "Sales & clients",
+    "Treasury & Finanzen": "Treasury & finance",
+    "Steuerung & Aufsicht": "Governance & oversight",
+    "Administration": "Administration",
+    "Support": "Support",
+    "Hilfe & FAQ": "Help & FAQ",
+    "Changelog": "Changelog",
+    "Ankauf & Auszahlungen": "Purchases & payouts",
+    "Controlling & Kosten": "Controlling & costs",
+    "Changelog / Chronologie": "Changelog / history",
+    "Programmierung": "Programming",
+    "Uhr": ""
 }

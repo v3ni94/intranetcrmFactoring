@@ -5,7 +5,7 @@
         <div class="lg:col-span-2 bg-white rounded-lg border border-aurevia-mist overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-aurevia-pearl text-[11px] uppercase text-aurevia-label-gray">
-                    <tr><th class="text-left p-3">Kunde</th><th class="text-left p-3">Typ</th><th class="text-right p-3">Limit</th><th class="text-right p-3">Auslastung</th></tr>
+                    <tr><th class="text-left p-3">Kunde</th><th class="text-left p-3">Typ</th><th class="text-right p-3">Limit</th><th class="text-right p-3">Auslastung</th><th class="text-left p-3">Versicherung</th></tr>
                 </thead>
                 <tbody>
                 @forelse($lines as $l)
@@ -14,9 +14,20 @@
                         <td class="p-3">{{ $l->line_type }}</td>
                         <td class="p-3 text-right">{{ eur($l->limit_amount) }}</td>
                         <td class="p-3 text-right">{{ pct($l->utilization) }}</td>
+                        <td class="p-3">
+                            @if((float) $l->limit_amount > (float) config('aurevia.insurance_threshold') && $l->insurance_status === 'nicht_versichert')
+                                <span class="text-xs px-2 py-0.5 rounded bg-red-100 text-red-800">Klumpenrisiko — Versicherung prüfen</span>
+                            @elseif($l->insurance_status === 'versichert')
+                                <span class="text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">versichert{{ $l->insured_amount ? ' ('.eur($l->insured_amount).')' : '' }}</span>
+                            @elseif($l->insurance_status === 'beantragt')
+                                <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800">beantragt</span>
+                            @else
+                                <span class="text-xs text-aurevia-label-gray">–</span>
+                            @endif
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="p-6 text-center text-aurevia-label-gray">Keine Kreditlinien vorhanden.</td></tr>
+                    <tr><td colspan="5" class="p-6 text-center text-aurevia-label-gray">Keine Kreditlinien vorhanden.</td></tr>
                 @endforelse
                 </tbody>
             </table>

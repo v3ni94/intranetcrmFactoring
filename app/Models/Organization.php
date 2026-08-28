@@ -14,10 +14,12 @@ class Organization extends Model
         'tenant_id', 'org_type', 'name', 'legal_form', 'register_number', 'tax_number',
         'specialty', 'street', 'zip', 'city', 'country', 'iban_masked', 'customer_status',
         'risk_class', 'pseudonym_id', 'account_manager_id', 'is_demo',
+        'rating', 'rating_points', 'rating_updated_at', 'segment', 'customer_type',
     ];
 
     protected $casts = [
         'is_demo' => 'boolean',
+        'rating_updated_at' => 'datetime',
     ];
 
     public function contacts()

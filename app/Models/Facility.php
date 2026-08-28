@@ -13,6 +13,7 @@ class Facility extends Model
         'tenant_id', 'investor_organization_id', 'facility_number', 'name', 'commitment_amount',
         'drawn_amount', 'interest_rate_percent', 'commitment_fee_percent', 'start_date',
         'maturity_date', 'seniority', 'covenants', 'status', 'detail_level', 'is_demo',
+        'early_termination_right', 'termination_notice_days', 'terminated_at', 'termination_reason',
     ];
 
     protected $casts = [
@@ -22,6 +23,8 @@ class Facility extends Model
         'maturity_date' => 'date',
         'covenants' => 'array',
         'is_demo' => 'boolean',
+        'early_termination_right' => 'boolean',
+        'terminated_at' => 'datetime',
     ];
 
     public function investorOrganization()

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\CapTableController;
+use App\Http\Controllers\CostController;
 use App\Http\Controllers\CreditLineController;
 use App\Http\Controllers\Crm\LeadController;
 use App\Http\Controllers\Crm\OpportunityController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DunningController;
 use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\GovernanceController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\OrganizationController;
@@ -28,6 +30,7 @@ use App\Http\Controllers\ReceivableController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RiskController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\Treasury\BankAccountController;
 use App\Http\Controllers\UserAdminController;
 use App\Support\RoleCatalog;
@@ -76,6 +79,10 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{receivable}/formale-pruefung', [ReceivableController::class, 'formalCheck'])->name('formal-check');
             Route::post('/{receivable}/risiko-pruefung', [ReceivableController::class, 'riskCheck'])->name('risk-check');
             Route::post('/{receivable}/ablehnen', [ReceivableController::class, 'reject'])->name('reject');
+            // Eskalation nach Markt/Marktfolge-Prinzip (MaRisk, v3.00)
+            Route::post('/{receivable}/zweitvotum-anfordern', [ReceivableController::class, 'requestSecondVote'])->name('request-second-vote');
+            Route::post('/{receivable}/marktfolge-votum', [ReceivableController::class, 'marketFollowUpVote'])->name('market-followup-vote');
+            Route::post('/{receivable}/vorstand-votum', [ReceivableController::class, 'boardVote'])->name('board-vote');
         });
 
         // Ankauf
@@ -128,6 +135,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/onboarding', [OnboardingController::class, 'index'])->name('onboarding.index');
 
         // Provider-Adapter-Aktionen (Abschnitt 20), aufgerufen von der Kundendetailseite
+        Route::post('/kunden/{organization}/rating', [OrganizationController::class, 'updateRating'])->name('organizations.update-rating');
         Route::post('/kunden/{organization}/kyc-pruefung', [OrganizationController::class, 'runKyc'])->name('organizations.run-kyc');
         Route::post('/kunden/{organization}/bonitaetspruefung', [OrganizationController::class, 'runCreditCheck'])->name('organizations.run-credit-check');
         Route::post('/kunden/{organization}/registerabgleich', [OrganizationController::class, 'runRegisterCheck'])->name('organizations.run-register-check');
@@ -146,7 +154,16 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('fazilitaeten')->name('facilities.')->group(function () {
             Route::get('/', [FacilityController::class, 'index'])->name('index');
             Route::post('/', [FacilityController::class, 'store'])->name('store');
+            Route::post('/{facility}/kuendigen', [FacilityController::class, 'terminate'])->name('terminate');
         });
+
+        // Controlling: Kostenpflege (v3.00)
+        Route::middleware('role:controlling|treasury_finance|geschaeftsleitung|superadmin_demo')
+            ->prefix('controlling')->name('costs.')->group(function () {
+                Route::get('/', [CostController::class, 'index'])->name('index');
+                Route::post('/', [CostController::class, 'store'])->name('store');
+                Route::post('/{cost}/loeschen', [CostController::class, 'destroy'])->name('destroy');
+            });
 
         // Aufgaben
         Route::prefix('aufgaben')->name('tasks.')->group(function () {
@@ -165,6 +182,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reporting', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reporting/forderungen.csv', [ReportController::class, 'exportReceivables'])->name('reports.receivables');
         Route::get('/reporting/journal.csv', [ReportController::class, 'exportJournal'])->name('reports.journal');
+        Route::post('/reporting/kpi-mail', [ReportController::class, 'sendKpiReport'])->name('reports.send-kpi');
+        Route::post('/reporting/abos', [ReportController::class, 'storeSubscription'])->name('reports.subscriptions.store');
+        Route::post('/reporting/abos/{subscription}/umschalten', [ReportController::class, 'toggleSubscription'])->name('reports.subscriptions.toggle');
     });
 
     // Audit & Freigaben (nur Compliance, Geschaeftsleitung, Systemadministration, Superadmin)
@@ -187,6 +207,19 @@ Route::middleware(['auth'])->group(function () {
     // Integrationen & Schnittstellen-Status (Abschnitt 20)
     Route::middleware('role:systemadministration|geschaeftsleitung|superadmin_demo')
         ->get('/einstellungen/integrationen', [IntegrationController::class, 'index'])->name('integrations.index');
+
+    // Hilfe & FAQ, Changelog (alle authentifizierten Rollen)
+    Route::get('/hilfe/faq', [HelpController::class, 'faq'])->name('help.faq');
+    Route::get('/hilfe/changelog', [HelpController::class, 'changelog'])->name('help.changelog');
+
+    // Support-Tickets (alle authentifizierten Rollen; Externe sehen nur eigene)
+    Route::prefix('support')->name('tickets.')->group(function () {
+        Route::get('/', [TicketController::class, 'index'])->name('index');
+        Route::post('/', [TicketController::class, 'store'])->name('store');
+        Route::get('/{ticket}', [TicketController::class, 'show'])->name('show');
+        Route::post('/{ticket}/antwort', [TicketController::class, 'reply'])->name('reply');
+        Route::post('/{ticket}/status', [TicketController::class, 'updateStatus'])->name('status');
+    });
 
     // Benutzerverwaltung
     Route::middleware('role:systemadministration|geschaeftsleitung|superadmin_demo')

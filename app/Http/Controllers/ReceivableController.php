@@ -78,6 +78,79 @@ class ReceivableController extends Controller
         return back()->with('status', $message);
     }
 
+    /**
+     * Eskalationsprozess nach Markt/Marktfolge-Prinzip (MaRisk, v3.00):
+     * Gegen eine Ablehnung (z.B. Bonitaet/Regelpruefung) kann der Markt ein
+     * Zweitvotum der Marktfolge anfordern. Lehnt die Marktfolge ab, eskaliert
+     * der Fall an den Vorstand als letzte Instanz. Jede Entscheidung erfordert
+     * eine Begruendung und wird revisionssicher auditiert. Der Aufsichtsrat
+     * entscheidet bewusst NICHT operativ (Ueberwachungsorgan), er erhaelt die
+     * Eskalationen aggregiert im Reporting.
+     */
+    public function requestSecondVote(Request $request, Receivable $receivable)
+    {
+        abort_unless(in_array($receivable->status, ['abgelehnt', 'rueckfrage'], true), 422,
+            'Ein Zweitvotum ist nur bei abgelehnten Forderungen oder Rückfragen möglich.');
+
+        $data = $request->validate(['reason' => 'required|string|max:500']);
+
+        $receivable->update(['status' => 'zweitvotum_marktfolge']);
+        AuditLogger::log('escalate', Receivable::class, $receivable->id,
+            [], ['status' => 'zweitvotum_marktfolge'], 'Zweitvotum Marktfolge angefordert: '.$data['reason']);
+
+        return back()->with('status', 'Zweitvotum der Marktfolge angefordert.');
+    }
+
+    public function marketFollowUpVote(Request $request, Receivable $receivable)
+    {
+        abort_unless($request->user()->hasAnyRole(['kredit_risiko', 'geschaeftsleitung', 'superadmin_demo']), 403);
+        abort_unless($receivable->status === 'zweitvotum_marktfolge', 422, 'Kein offenes Marktfolge-Votum.');
+
+        $data = $request->validate([
+            'decision' => 'required|in:freigeben,ablehnen',
+            'reason' => 'required|string|max:500',
+        ]);
+
+        if ($data['decision'] === 'freigeben') {
+            $receivable->update(['status' => 'freigegeben', 'reviewed_by' => $request->user()->id, 'rejection_reason' => null]);
+            AuditLogger::log('approve', Receivable::class, $receivable->id, [], ['status' => 'freigegeben'],
+                'Marktfolge-Zweitvotum: freigegeben — '.$data['reason']);
+
+            return back()->with('status', 'Marktfolge hat freigegeben. Ankauf kann berechnet werden (Vier-Augen-Prinzip gilt weiterhin).');
+        }
+
+        $receivable->update(['status' => 'zweitvotum_vorstand', 'rejection_reason' => $data['reason']]);
+        AuditLogger::log('escalate', Receivable::class, $receivable->id, [], ['status' => 'zweitvotum_vorstand'],
+            'Marktfolge-Zweitvotum: abgelehnt, Eskalation an Vorstand — '.$data['reason']);
+
+        return back()->with('status', 'Marktfolge hat abgelehnt. Der Fall liegt jetzt beim Vorstand.');
+    }
+
+    public function boardVote(Request $request, Receivable $receivable)
+    {
+        abort_unless($request->user()->hasAnyRole(['geschaeftsleitung', 'superadmin_demo']), 403);
+        abort_unless($receivable->status === 'zweitvotum_vorstand', 422, 'Kein offenes Vorstands-Votum.');
+
+        $data = $request->validate([
+            'decision' => 'required|in:freigeben,ablehnen',
+            'reason' => 'required|string|max:500',
+        ]);
+
+        if ($data['decision'] === 'freigeben') {
+            $receivable->update(['status' => 'freigegeben', 'reviewed_by' => $request->user()->id, 'rejection_reason' => null]);
+            AuditLogger::log('approve', Receivable::class, $receivable->id, [], ['status' => 'freigegeben'],
+                'Vorstands-Votum: freigegeben — '.$data['reason']);
+
+            return back()->with('status', 'Vorstand hat freigegeben.');
+        }
+
+        $receivable->update(['status' => 'abgelehnt', 'rejection_reason' => $data['reason'], 'reviewed_by' => $request->user()->id]);
+        AuditLogger::log('reject', Receivable::class, $receivable->id, [], ['status' => 'abgelehnt'],
+            'Vorstands-Votum: endgültig abgelehnt — '.$data['reason']);
+
+        return back()->with('status', 'Vorstand hat endgültig abgelehnt.');
+    }
+
     public function reject(Request $request, Receivable $receivable)
     {
         // Nur Forderungen im Pruefprozess sind ablehnbar. Angekaufte, ausgezahlte

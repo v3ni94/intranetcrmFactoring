@@ -40,14 +40,21 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
             </div>
-            <nav class="py-3 space-y-0.5 text-sm">
+            <nav class="py-3 text-sm pb-8">
                 @auth
-                    @foreach(\App\Support\NavigationMenu::forUser(auth()->user()) as $item)
-                        <a href="{{ route($item['route']) }}"
-                           class="flex items-center gap-3 px-4 py-2 hover:bg-white/10 {{ request()->routeIs($item['route']) ? 'bg-white/10 border-l-2 border-aurevia-gold' : 'border-l-2 border-transparent' }}">
-                            <span class="w-1.5 h-1.5 rounded-full bg-aurevia-gold flex-shrink-0"></span>
-                            <span x-show="sidebarOpen" class="whitespace-nowrap">{{ __($item['label']) }}</span>
-                        </a>
+                    @foreach(\App\Support\NavigationMenu::forUser(auth()->user()) as $group)
+                        @if($group['heading'])
+                            <div x-show="sidebarOpen" class="px-4 pt-4 pb-1 text-[10px] uppercase tracking-widest text-aurevia-mist/70">{{ __($group['heading']) }}</div>
+                        @else
+                            <div class="pt-1"></div>
+                        @endif
+                        @foreach($group['items'] as $item)
+                            <a href="{{ route($item['route']) }}"
+                               class="flex items-center gap-3 px-4 py-1.5 hover:bg-white/10 {{ request()->routeIs($item['route']) ? 'bg-white/10 border-l-2 border-aurevia-gold' : 'border-l-2 border-transparent' }}">
+                                <span class="w-1.5 h-1.5 rounded-full bg-aurevia-gold flex-shrink-0"></span>
+                                <span x-show="sidebarOpen" class="whitespace-nowrap">{{ __($item['label']) }}</span>
+                            </a>
+                        @endforeach
                     @endforeach
                 @endauth
             </nav>
@@ -110,8 +117,9 @@
                 {{ $slot }}
             </main>
 
-            <footer class="text-[11px] text-aurevia-label-gray px-4 md:px-6 py-3 border-t border-aurevia-mist">
-                {{ __('Aurevia Factoring AG (Arbeitsname) · Projektgesellschaft in Vorbereitung · Registerangaben folgen nach Gründung · Interne Nutzung · Alle Kennzahlen ohne Gewähr, Modellrechnungen sind keine Zusage.') }} · v{{ config('aurevia.version') }}
+            <footer class="text-[11px] text-aurevia-label-gray px-4 md:px-6 py-3 border-t border-aurevia-mist flex flex-wrap items-center justify-between gap-2">
+                <span>{{ __('Aurevia Factoring AG (Arbeitsname) · Projektgesellschaft in Vorbereitung · Registerangaben folgen nach Gründung · Interne Nutzung · Alle Kennzahlen ohne Gewähr, Modellrechnungen sind keine Zusage.') }}</span>
+                <span class="whitespace-nowrap">{{ __('Ein Produkt der Müller Holding AG') }} · <a href="{{ route('help.changelog') }}" class="underline hover:text-aurevia-navy">v{{ config('aurevia.version') }}</a></span>
             </footer>
         </div>
     </div>

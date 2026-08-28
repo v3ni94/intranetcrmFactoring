@@ -10,6 +10,8 @@ use App\Services\Integrations\ESignatureAdapter;
 use App\Services\Integrations\KycKybAdapter;
 use App\Services\Integrations\PepSanctionsAdapter;
 use App\Services\Integrations\RegisterUboAdapter;
+use App\Support\AuditLogger;
+use App\Support\RatingCatalog;
 use Illuminate\Http\Request;
 
 class OrganizationController extends Controller
@@ -38,6 +40,38 @@ class OrganizationController extends Controller
         ]);
 
         return view('organizations.show', compact('organization'));
+    }
+
+    /**
+     * Internes Rating setzen (Kunde ODER Investor). Punkte 0-100 werden nach
+     * RatingCatalog in eine Stufe AAA..C uebersetzt; die Stufe bestimmt den
+     * Gebuehrenaufschlag beim Ankauf. Aenderungen werden auditiert.
+     */
+    public function updateRating(Request $request, Organization $organization)
+    {
+        $data = $request->validate([
+            'rating_points' => 'required|integer|min:0|max:100',
+            'segment' => 'nullable|in:'.implode(',', array_keys(RatingCatalog::SEGMENTS)),
+            'customer_type' => 'required|in:b2b,b2c',
+        ]);
+
+        $old = $organization->only(['rating', 'rating_points', 'segment', 'customer_type']);
+        $grade = RatingCatalog::gradeForPoints((int) $data['rating_points']);
+
+        $organization->update([
+            'rating' => $grade,
+            'rating_points' => $data['rating_points'],
+            'rating_updated_at' => now(),
+            'segment' => $data['segment'] ?? $organization->segment,
+            'customer_type' => $data['customer_type'],
+        ]);
+
+        AuditLogger::log('update', Organization::class, $organization->id, $old, [
+            'rating' => $grade, 'rating_points' => $data['rating_points'],
+            'segment' => $organization->segment, 'customer_type' => $organization->customer_type,
+        ], 'Rating/Segment aktualisiert');
+
+        return back()->with('status', "Rating aktualisiert: {$grade} ({$data['rating_points']} Punkte).");
     }
 
     public function runKyc(Request $request, Organization $organization, KycKybAdapter $adapter)

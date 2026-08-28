@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Purchase;
 use App\Models\Receivable;
+use App\Support\RatingCatalog;
 use App\Support\TenantContext;
 
 /**
@@ -19,7 +20,12 @@ class PurchaseCalculator
 
         $advanceRate = (float) $contract->advance_rate_percent;
         $reservePercent = (float) $contract->reserve_percent;
-        $feePercent = (float) $contract->factoring_fee_percent;
+
+        // Vertragsgebuehr plus ratingabhaengiger Aufschlag (v3.00): schwaechere
+        // Bonitaet des Kunden erhoeht die Factoringgebuehr transparent nach
+        // RatingCatalog; ohne Rating gilt die reine Vertragsgebuehr.
+        $ratingSurcharge = RatingCatalog::feeSurchargePercent($receivable->organization?->rating);
+        $feePercent = (float) $contract->factoring_fee_percent + $ratingSurcharge;
 
         $purchasable = $nominal;
         $immediatePayout = round($purchasable * ($advanceRate / 100), 2);

@@ -41,7 +41,7 @@
             </div>
 
             <footer class="text-[11px] text-aurevia-mist text-center py-4">
-                {{ __('Aurevia Factoring AG (Arbeitsname) · Interne Nutzung · Keine öffentliche Registrierung') }} · v{{ config('aurevia.version') }}
+                {{ __('Aurevia Factoring AG (Arbeitsname) · Interne Nutzung · Keine öffentliche Registrierung') }} · {{ __('Ein Produkt der Müller Holding AG') }} · v{{ config('aurevia.version') }}
             </footer>
         </div>
     </body>
