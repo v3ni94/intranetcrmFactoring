@@ -38,7 +38,7 @@ class DemoController extends Controller
 
         AuditLogger::log('delete', Tenant::class, $tenant->id, [], ['affected' => $affected], 'Demo zurückgesetzt');
 
-        return redirect()->route('demo.index')->with('status', "Demo zurückgesetzt. {$affected} Datensätze ersetzt durch die definierte Ausgangslage.");
+        return redirect()->route('demo.index')->with('status', __('Demo zurückgesetzt. :affected Datensätze ersetzt durch die definierte Ausgangslage.', ['affected' => $affected]));
     }
 
     public function delete(Request $request, DemoResetService $service)
@@ -48,8 +48,8 @@ class DemoController extends Controller
             'password' => 'required|string',
         ]);
 
-        abort_unless($data['confirmation'] === 'DEMO LÖSCHEN', 422, 'Bitte exakt "DEMO LÖSCHEN" eingeben, um fortzufahren.');
-        abort_unless(Hash::check($data['password'], $request->user()->password), 403, 'Passwort zur erneuten Authentifizierung stimmt nicht.');
+        abort_unless($data['confirmation'] === 'DEMO LÖSCHEN', 422, __('Bitte exakt "DEMO LÖSCHEN" eingeben, um fortzufahren.'));
+        abort_unless(Hash::check($data['password'], $request->user()->password), 403, __('Passwort zur erneuten Authentifizierung stimmt nicht.'));
 
         $tenant = $request->user()->tenant;
         $service->assertDemoTenant($tenant);
@@ -66,6 +66,6 @@ class DemoController extends Controller
 
         AuditLogger::log('delete', Tenant::class, $tenant->id, [], ['affected' => $affected], 'Alle Demo-Daten gelöscht');
 
-        return redirect()->route('demo.index')->with('status', "Alle Demo-Daten gelöscht ({$affected} Datensätze). Nutzer, Rollen und Tenant bleiben erhalten.");
+        return redirect()->route('demo.index')->with('status', __('Alle Demo-Daten gelöscht (:affected Datensätze). Nutzer, Rollen und Tenant bleiben erhalten.', ['affected' => $affected]));
     }
 }

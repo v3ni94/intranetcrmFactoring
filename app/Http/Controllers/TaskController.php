@@ -32,7 +32,7 @@ class TaskController extends Controller
 
         AuditLogger::log('create', Task::class, $task->id, [], $task->toArray());
 
-        return back()->with('status', 'Aufgabe angelegt.');
+        return back()->with('status', __('Aufgabe angelegt.'));
     }
 
     public function complete(Task $task)
@@ -40,6 +40,6 @@ class TaskController extends Controller
         $task->update(['status' => 'erledigt']);
         AuditLogger::log('update', Task::class, $task->id, [], ['status' => 'erledigt']);
 
-        return back()->with('status', 'Aufgabe erledigt.');
+        return back()->with('status', __('Aufgabe erledigt.'));
     }
 }

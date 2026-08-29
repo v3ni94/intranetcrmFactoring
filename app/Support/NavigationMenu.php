@@ -14,14 +14,13 @@ class NavigationMenu
      */
     public static function groups(): array
     {
-        $admin = ['systemadministration', 'geschaeftsleitung', 'superadmin_demo'];
-
         return [
             ['heading' => null, 'items' => [
                 ['label' => 'Start', 'route' => 'dashboard', 'roles' => null],
                 ['label' => 'Verträge & Dokumente', 'route' => 'documents.index', 'roles' => null],
                 ['label' => 'Support', 'route' => 'tickets.index', 'roles' => null],
                 ['label' => 'Hilfe & FAQ', 'route' => 'help.faq', 'roles' => null],
+                ['label' => 'Onboarding-Leitfaden', 'route' => 'help.onboarding', 'roles' => null],
                 ['label' => 'Einstellungen', 'route' => 'profile.edit', 'roles' => null],
             ]],
             ['heading' => 'Kundenportal', 'items' => [
@@ -56,13 +55,38 @@ class NavigationMenu
                 ['label' => 'Projekt & Beschlüsse', 'route' => 'governance.index', 'roles' => ['geschaeftsleitung', 'superadmin_demo']],
                 ['label' => 'Cap-Table & Register', 'route' => 'captable.index', 'roles' => ['geschaeftsleitung', 'superadmin_demo']],
             ]],
-            ['heading' => 'Administration', 'items' => [
-                ['label' => 'Benutzer', 'route' => 'users.index', 'roles' => $admin],
-                ['label' => 'Integrationen', 'route' => 'integrations.index', 'roles' => $admin],
-                ['label' => 'Changelog', 'route' => 'help.changelog', 'roles' => array_merge($admin, ['compliance'])],
-                ['label' => 'Demo-Steuerung', 'route' => 'demo.index', 'roles' => ['superadmin_demo']],
-            ]],
         ];
+    }
+
+    /**
+     * Administrations-Eintraege (v3.02): erscheinen nicht mehr in der Sidebar,
+     * sondern als Dropdown oben rechts im Header.
+     *
+     * @return array<int, array{label:string, route:string, roles:array<string>}>
+     */
+    public static function adminItems(): array
+    {
+        $admin = ['systemadministration', 'geschaeftsleitung', 'superadmin_demo'];
+
+        return [
+            ['label' => 'Benutzer', 'route' => 'users.index', 'roles' => $admin],
+            ['label' => 'Integrationen', 'route' => 'integrations.index', 'roles' => $admin],
+            ['label' => 'Changelog', 'route' => 'help.changelog', 'roles' => array_merge($admin, ['compliance'])],
+            ['label' => 'Demo-Steuerung', 'route' => 'demo.index', 'roles' => ['superadmin_demo']],
+        ];
+    }
+
+    /**
+     * Administrations-Eintraege, die der Nutzer sehen darf (Anzeige-Logik,
+     * Zugriffsschutz erfolgt serverseitig ueber die Route-Middleware).
+     */
+    public static function adminItemsForUser($user): array
+    {
+        $roles = $user->getRoleNames()->all();
+
+        return array_values(array_filter(self::adminItems(), function ($item) use ($roles) {
+            return count(array_intersect($item['roles'], $roles)) > 0;
+        }));
     }
 
     /**

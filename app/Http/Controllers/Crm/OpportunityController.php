@@ -35,7 +35,7 @@ class OpportunityController extends Controller
 
         AuditLogger::log('create', Opportunity::class, $opportunity->id, [], $opportunity->toArray());
 
-        return back()->with('status', 'Opportunity angelegt: '.$opportunity->name);
+        return back()->with('status', __('Opportunity angelegt: :name', ['name' => $opportunity->name]));
     }
 
     public function updateStage(Request $request, Opportunity $opportunity)
@@ -45,6 +45,6 @@ class OpportunityController extends Controller
 
         AuditLogger::log('update', Opportunity::class, $opportunity->id, [], ['stage' => $opportunity->stage]);
 
-        return back()->with('status', 'Stage aktualisiert.');
+        return back()->with('status', __('Stage aktualisiert.'));
     }
 }

@@ -58,7 +58,7 @@ class CostController extends Controller
 
         AuditLogger::log('create', OperatingCost::class, $cost->id, [], $cost->toArray());
 
-        return back()->with('status', 'Kostenposition erfasst.');
+        return back()->with('status', __('Kostenposition erfasst.'));
     }
 
     public function destroy(Request $request, OperatingCost $cost)
@@ -66,6 +66,6 @@ class CostController extends Controller
         AuditLogger::log('delete', OperatingCost::class, $cost->id, $cost->toArray(), [], 'Kostenposition gelöscht');
         $cost->delete();
 
-        return back()->with('status', 'Kostenposition gelöscht.');
+        return back()->with('status', __('Kostenposition gelöscht.'));
     }
 }

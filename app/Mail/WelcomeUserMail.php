@@ -23,8 +23,8 @@ class WelcomeUserMail extends Mailable
     {
         return new Envelope(
             subject: $this->isReset
-                ? 'Aurevia Intranet – Passwort zurückgesetzt'
-                : 'Willkommen im Aurevia Intranet – Zugang einrichten',
+                ? __('Aurevia Intranet – Passwort zurückgesetzt')
+                : __('Willkommen im Aurevia Intranet – Zugang einrichten'),
         );
     }
 

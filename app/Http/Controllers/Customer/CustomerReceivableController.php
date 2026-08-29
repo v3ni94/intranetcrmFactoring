@@ -97,7 +97,7 @@ class CustomerReceivableController extends Controller
         AuditLogger::log('create', Receivable::class, $receivable->id, [], $receivable->toArray());
 
         return redirect()->route('customer.receivables.show', $receivable)
-            ->with('status', 'Forderung eingereicht. Sie wird nun von Aurevia geprüft.');
+            ->with('status', __('Forderung eingereicht. Sie wird nun von Aurevia geprüft.'));
     }
 
     public function show(Request $request, Receivable $receivable)

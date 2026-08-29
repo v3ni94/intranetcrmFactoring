@@ -20,7 +20,7 @@ class KpiReportMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Aurevia KPI-Report vom '.$this->reportDate,
+            subject: __('Aurevia KPI-Report vom :date', ['date' => $this->reportDate]),
         );
     }
 

@@ -59,7 +59,7 @@ class TicketController extends Controller
         AuditLogger::log('create', Ticket::class, $ticket->id, [], ['subject' => $ticket->subject]);
 
         return redirect()->route('tickets.show', $ticket)
-            ->with('status', "Ticket {$ticket->ticket_number} erstellt.");
+            ->with('status', __('Ticket :number erstellt.', ['number' => $ticket->ticket_number]));
     }
 
     public function show(Request $request, Ticket $ticket)
@@ -84,7 +84,7 @@ class TicketController extends Controller
         $isInternal = $user->hasAnyRole(RoleCatalog::INTERNAL_ROLES);
 
         abort_unless($isInternal || $ticket->created_by === $user->id, 403);
-        abort_if($ticket->status === 'geschlossen', 422, 'Ticket ist geschlossen.');
+        abort_if($ticket->status === 'geschlossen', 422, __('Ticket ist geschlossen.'));
 
         $data = $request->validate([
             'body' => 'required|string|max:5000',
@@ -106,7 +106,7 @@ class TicketController extends Controller
             $ticket->update(['status' => 'in_bearbeitung']);
         }
 
-        return back()->with('status', 'Antwort gespeichert.');
+        return back()->with('status', __('Antwort gespeichert.'));
     }
 
     public function updateStatus(Request $request, Ticket $ticket)
@@ -122,6 +122,6 @@ class TicketController extends Controller
 
         AuditLogger::log('update', Ticket::class, $ticket->id, ['status' => $old], ['status' => $data['status']]);
 
-        return back()->with('status', "Ticketstatus: {$data['status']}.");
+        return back()->with('status', __('Ticketstatus: :status.', ['status' => $data['status']]));
     }
 }

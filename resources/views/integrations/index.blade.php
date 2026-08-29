@@ -1,19 +1,17 @@
 <x-app-layout>
-    <x-slot name="header">Integrationen &amp; Schnittstellen</x-slot>
+    <x-slot name="header">{{ __('Integrationen & Schnittstellen') }}</x-slot>
 
     <div class="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-md p-3 mb-6">
-        Alle Adapter laufen im Sandbox-/Demo-Modus. Kein Anbieter ist fest verdrahtet — jede
-        Kategorie kann bei Produktivsetzung gegen einen echten Provider getauscht werden
-        (Abschnitt 20). Es findet keine echte Datenübertragung an Dritte statt.
+        {{ __('Alle Adapter laufen im Sandbox-/Demo-Modus. Kein Anbieter ist fest verdrahtet — jede Kategorie kann bei Produktivsetzung gegen einen echten Provider getauscht werden (Abschnitt 20). Es findet keine echte Datenübertragung an Dritte statt.') }}
     </div>
 
     <div class="bg-white rounded-lg border border-aurevia-mist overflow-x-auto mb-6">
         <table class="w-full text-sm">
             <thead class="bg-aurevia-pearl text-[11px] uppercase text-aurevia-label-gray">
                 <tr>
-                    <th class="text-left p-3">Kategorie</th><th class="text-left p-3">Adapter</th>
-                    <th class="text-left p-3">Modus</th><th class="text-left p-3">Status</th>
-                    <th class="text-left p-3">Letzter Erfolg</th><th class="text-right p-3">Ereignisse</th>
+                    <th class="text-left p-3">{{ __('Kategorie') }}</th><th class="text-left p-3">{{ __('Adapter') }}</th>
+                    <th class="text-left p-3">{{ __('Modus') }}</th><th class="text-left p-3">{{ __('Status') }}</th>
+                    <th class="text-left p-3">{{ __('Letzter Erfolg') }}</th><th class="text-right p-3">{{ __('Ereignisse') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,7 +25,7 @@
                             {{ $p->status }}
                         </span>
                     </td>
-                    <td class="p-3">{{ $p->last_success_at ? $p->last_success_at->format('d.m.Y H:i') : 'nie' }}</td>
+                    <td class="p-3">{{ $p->last_success_at ? $p->last_success_at->format('d.m.Y H:i') : __('nie') }}</td>
                     <td class="p-3 text-right">{{ $p->events_count }}</td>
                 </tr>
             @endforeach
@@ -36,10 +34,10 @@
     </div>
 
     <div class="bg-white rounded-lg border border-aurevia-mist overflow-x-auto">
-        <h2 class="text-sm font-semibold text-aurevia-navy p-3 pb-0">Letzte Ereignisse</h2>
+        <h2 class="text-sm font-semibold text-aurevia-navy p-3 pb-0">{{ __('Letzte Ereignisse') }}</h2>
         <table class="w-full text-sm">
             <thead class="text-[11px] uppercase text-aurevia-label-gray">
-                <tr><th class="text-left p-3">Zeit</th><th class="text-left p-3">Adapter</th><th class="text-left p-3">Status</th><th class="text-left p-3">Zusammenfassung</th></tr>
+                <tr><th class="text-left p-3">{{ __('Zeit') }}</th><th class="text-left p-3">{{ __('Adapter') }}</th><th class="text-left p-3">{{ __('Status') }}</th><th class="text-left p-3">{{ __('Zusammenfassung') }}</th></tr>
             </thead>
             <tbody>
             @forelse($recentEvents as $e)
@@ -50,7 +48,7 @@
                     <td class="p-3">{{ $e->summary }}</td>
                 </tr>
             @empty
-                <tr><td colspan="4" class="p-6 text-center text-aurevia-label-gray">Noch keine Ereignisse.</td></tr>
+                <tr><td colspan="4" class="p-6 text-center text-aurevia-label-gray">{{ __('Noch keine Ereignisse.') }}</td></tr>
             @endforelse
             </tbody>
         </table>

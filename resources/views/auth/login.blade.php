@@ -26,7 +26,7 @@
         <div class="flex items-center justify-end mt-4 gap-3">
             @if (Route::has('password.request'))
                 <a class="underline text-sm text-gray-600 hover:text-aurevia-navy" href="{{ route('password.request') }}">
-                    Passwort vergessen?
+                    {{ __('Passwort vergessen?') }}
                 </a>
             @endif
 
@@ -36,18 +36,18 @@
 
     @if(config('aurevia.demo_mode'))
     <div class="mt-6 pt-5 border-t border-aurevia-mist">
-        <p class="text-[11px] uppercase tracking-wide text-aurevia-label-gray mb-2">Demo-Rollenwahl</p>
+        <p class="text-[11px] uppercase tracking-wide text-aurevia-label-gray mb-2">{{ __('Demo-Rollenwahl') }}</p>
         <form method="GET" action="{{ route('login') }}" x-data="{}" class="flex gap-2">
             <select onchange="document.getElementById('email').value = this.value; document.getElementById('password').value = '{{ \Database\Seeders\DemoUserSeeder::DEMO_PASSWORD }}';"
                     class="flex-1 text-sm rounded-md border-aurevia-mist">
-                <option value="">Demo-Zugang wählen …</option>
+                <option value="">{{ __('Demo-Zugang wählen …') }}</option>
                 @foreach(\App\Support\RoleCatalog::ROLES as $slug => $label)
                     <option value="demo.{{ $slug }}@aurevia-factoring.de">{{ $label }}</option>
                 @endforeach
             </select>
         </form>
         <p class="text-[11px] text-aurevia-label-gray mt-2">
-            Demo-Passwort für alle Zugänge: <code class="bg-aurevia-pearl px-1 py-0.5 rounded">{{ \Database\Seeders\DemoUserSeeder::DEMO_PASSWORD }}</code>
+            {{ __('Demo-Passwort für alle Zugänge:') }} <code class="bg-aurevia-pearl px-1 py-0.5 rounded">{{ \Database\Seeders\DemoUserSeeder::DEMO_PASSWORD }}</code>
         </p>
     </div>
     @endif

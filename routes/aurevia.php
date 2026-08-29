@@ -208,9 +208,14 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:systemadministration|geschaeftsleitung|superadmin_demo')
         ->get('/einstellungen/integrationen', [IntegrationController::class, 'index'])->name('integrations.index');
 
-    // Hilfe & FAQ, Changelog (alle authentifizierten Rollen)
+    // Hilfe & FAQ, Changelog, Onboarding-Leitfaden (alle authentifizierten Rollen)
     Route::get('/hilfe/faq', [HelpController::class, 'faq'])->name('help.faq');
     Route::get('/hilfe/changelog', [HelpController::class, 'changelog'])->name('help.changelog');
+    Route::get('/hilfe/onboarding', [HelpController::class, 'onboarding'])->name('help.onboarding');
+    // Wissensdatenbank: Handbuecher als lesbare Seiten (BaFin/Datenschutz nur intern)
+    Route::get('/hilfe/wissen/{doc}', [HelpController::class, 'knowledge'])
+        ->whereIn('doc', ['handbuch', 'prozesse', 'bafin', 'datenschutz'])
+        ->name('help.knowledge');
 
     // Support-Tickets (alle authentifizierten Rollen; Externe sehen nur eigene)
     Route::prefix('support')->name('tickets.')->group(function () {
@@ -226,6 +231,9 @@ Route::middleware(['auth'])->group(function () {
         ->prefix('einstellungen/benutzer')->name('users.')->group(function () {
             Route::get('/', [UserAdminController::class, 'index'])->name('index');
             Route::post('/', [UserAdminController::class, 'store'])->name('store');
+            Route::get('/{user}/bearbeiten', [UserAdminController::class, 'edit'])->name('edit');
+            Route::post('/{user}/bearbeiten', [UserAdminController::class, 'update'])->name('update');
+            Route::post('/{user}/loeschen', [UserAdminController::class, 'destroy'])->name('destroy');
             Route::post('/{user}/aktiv', [UserAdminController::class, 'toggleActive'])->name('toggle-active');
             Route::post('/{user}/passwort', [UserAdminController::class, 'resetPassword'])->name('reset-password');
         });

@@ -60,7 +60,7 @@ class TwoFactorSetupController extends Controller
         $google2fa = new Google2FA;
 
         if (! $user->two_factor_secret || ! $google2fa->verifyKey($user->two_factor_secret, $data['code'])) {
-            return back()->withErrors(['code' => 'Der eingegebene Code ist ungültig oder abgelaufen.']);
+            return back()->withErrors(['code' => __('Der eingegebene Code ist ungültig oder abgelaufen.')]);
         }
 
         $recoveryCodes = collect(range(1, 8))->map(fn () => Str::upper(Str::random(10)))->all();
@@ -73,6 +73,6 @@ class TwoFactorSetupController extends Controller
             'mfa_enabled' => true,
         ])->save();
 
-        return redirect()->route('two-factor.setup')->with('recovery_codes', $recoveryCodes)->with('status', 'Zwei-Faktor-Authentifizierung aktiviert.');
+        return redirect()->route('two-factor.setup')->with('recovery_codes', $recoveryCodes)->with('status', __('Zwei-Faktor-Authentifizierung aktiviert.'));
     }
 }

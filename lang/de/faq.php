@@ -1,0 +1,65 @@
+<?php
+
+// FAQ-Inhalte (v3.02): lokalisierbar, Deutsch ist die Referenzfassung.
+return [
+    'intro' => 'Kurzanleitungen zu allen Kernprozessen. Ausführliche Beschreibungen finden Sie in der Wissensdatenbank (Benutzerhandbuch, Prozessleitfaden) und im Onboarding-Leitfaden.',
+    'disclaimer' => 'Alle Angaben beschreiben die Systemfunktionen. Rechtliche und aufsichtsrechtliche Fragen (KWG, GwG, DSGVO, Verbraucherschutz) sind vor Produktivbetrieb durch Rechtsanwalt/Steuerberater zu prüfen.',
+    'items' => [
+        [
+            'q' => 'Wie lege ich einen neuen Kunden (Mediziner) an und pflege ihn?',
+            'a' => "1. Vertrieb & Kunden → CRM / Vertrieb: Lead erfassen und qualifizieren.\n2. Vertrieb & Kunden → Onboarding: Lead in die Onboarding-Pipeline übernehmen (Datenaufnahme, Unterlagen).\n3. KYC durchführen (siehe eigene FAQ) — ohne abgeschlossenes KYC kein aktiver Vertrag.\n4. Vertrieb & Kunden → Kunden → Kundendetailseite: Stammdaten prüfen, Branchensegment (Arzt, Zahnarzt, Apotheke, Dentallabor, Tierarzt, …), B2B/B2C und Rating setzen.\n5. Vertrag mit individuellen Konditionen anlegen (Bevorschussung, Gebühr, Zins, Laufzeit) und Kreditlinien einrichten.\n6. Benutzer → Kundenzugang anlegen (Rolle Kunde, an die Organisation gebunden), Zugangsdaten gehen per E-Mail mit Passwort-Setz-Link an den Nutzer.",
+        ],
+        [
+            'q' => 'Wie lege ich einen Investor an und erfasse gestelltes Kapital?',
+            'a' => "1. Vertrieb & Kunden → Kunden: Organisation mit Typ Investor anlegen (bzw. durch die Systemadministration anlegen lassen).\n2. Treasury & Finanzen → Investoren & Fazilitäten: Fazilität anlegen — zugesagtes Kapital, Zinssatz, Laufzeit, Rang (senior/nachrangig), Sonderkündigungsrecht ja/nein und Kündigungsfrist.\n3. Kapitalabrufe (Drawdowns), Zinszahlungen und Rückführungen werden als Ereignisse an der Fazilität protokolliert.\n4. Benutzer → Investorenzugang anlegen (Rolle Investor, an die Investor-Organisation gebunden). Der Investor sieht dann unter Meine Kapitalbeziehung sein Investment, die Auslastung und eine gekennzeichnete Modellrechnung.\n5. Rating des Investors auf der Organisationsseite pflegen (relevant für interne Konzentrations- und Verlässlichkeitssteuerung).",
+        ],
+        [
+            'q' => 'Wie läuft ein Factoring-Vorgang von der Einreichung bis zur Abrechnung?',
+            'a' => "1. Der Kunde reicht die Forderung im Kundenportal ein (oder Operations erfasst sie).\n2. Operations: formale Prüfung → Risiko-/Limitprüfung (automatische Regelprüfung).\n3. Ankauf berechnen: Das System ermittelt Auszahlung, Sicherheitseinbehalt, Gebühr (inkl. Rating-Aufschlag) und Zinsschätzung.\n4. Vier-Augen-Prinzip: Eine ZWEITE Person erteilt die Zweitfreigabe — dieselbe Person kann nicht beides freigeben.\n5. Treasury: Auszahlungsbatch bilden → Erstfreigabe → Zweitfreigabe (wieder Vier-Augen) → SEPA-Datei → Bankbestätigung.\n6. Zahlungseingang: Kontoumsätze werden Forderungen zugeordnet (auch Teilzahlungen, kumuliert).\n7. Nach vollständiger Zahlung: Abrechnung — der Sicherheitseinbehalt wird freigegeben. Jeder Schritt wird revisionssicher im Audit-Log protokolliert.",
+        ],
+        [
+            'q' => 'Wie funktioniert der KYC-Prozess?',
+            'a' => "1. Kundendetailseite → KYC-Prüfung starten: Identifikation der Organisation und der handelnden Personen.\n2. Wirtschaftlich Berechtigte (UBO) erfassen und einzeln per PEP-/Sanktionslisten-Screening prüfen.\n3. Registerabgleich (Handelsregister/Berufsregister) durchführen.\n4. Bonitätsprüfung über die Auskunftei-Schnittstelle (Creditreform/SCHUFA vorbereitet, aktuell Sandbox).\n5. Ergebnis und Unterlagen werden am KYC-Fall dokumentiert; erst mit abgeschlossenem KYC wird der Kunde aktiv. Wiederholungsprüfungen nach Risikoklasse (GwG-Turnus) einplanen.",
+        ],
+        [
+            'q' => 'Wie funktioniert das Rating und was bewirkt es?',
+            'a' => "Skala AAA (ausgezeichnet) bis C (ausfallgefährdet), abgeleitet aus einem Punktwert 0–100. Pflege: Kundendetailseite → Rating & Einstufung.\nWirkung: Je Ratingstufe gilt ein Gebührenaufschlag auf die vertragliche Factoringgebühr (AAA: +0,0 %-Punkte bis C: +2,5 %-Punkte), der beim Ankauf automatisch einfließt. Das Rating ist ein internes Steuerungsinstrument, keine externe Bonitätsauskunft. Es gilt für Kunden UND Investoren.",
+        ],
+        [
+            'q' => 'Was ist der Unterschied zwischen echtem und unechtem Factoring?',
+            'a' => "Echtes Factoring: Der Factor übernimmt das Ausfallrisiko (Delkredere) — der Kunde haftet nicht für die Zahlungsfähigkeit des Debitors.\nUnechtes Factoring: Das Ausfallrisiko verbleibt beim Kunden (Rückgriff/Regress möglich).\nDie Zuordnung erfolgt am Factoring-Produkt (Feld Regress-Typ) und prägt Vertrag, Bilanzierung und Risikosteuerung. Ebenfalls am Produkt: offenes Factoring (Debitor wird über die Abtretung informiert) oder stilles Factoring (keine Information des Debitors).",
+        ],
+        [
+            'q' => 'Was bedeutet B2B/B2C bei Kunden und Debitoren?',
+            'a' => "B2B: gewerbliche Gegenpartei — die Abtretung kann formfrei vereinbart werden, eine gesonderte Abtretungsanzeige an den Debitor ist beim offenen Factoring üblich, beim stillen entbehrlich.\nB2C: Verbraucher als Rechnungsempfänger — hier gelten zusätzliche Anforderungen (Verbraucherschutz, Datenschutz, ggf. Information über die Abtretung). Die Kennzeichnung erfolgt auf der Organisationsseite; B2C-Konstellationen vor Produktivbetrieb rechtlich prüfen lassen.",
+        ],
+        [
+            'q' => 'Wie funktioniert die Warenkreditversicherung / das Klumpenrisiko?',
+            'a' => "Kreditlinien oberhalb der Schwelle (Standard: 30.000 EUR, konfigurierbar) gelten als Klumpenrisiko und sollen ganz oder teilweise versichert werden.\nJe Kreditlinie werden Versicherer, versicherte Summe und Status (nicht versichert, beantragt, versichert, abgelehnt) gepflegt.\nDie Schnittstelle zum Versicherer ist als Adapter vorbereitet: Zielbild ist eine monatliche Linienmeldung (Betrag, internes Rating, pseudonymisierter Debitor) mit Rückmeldung von Annahme und Prämie — die konkrete Ausgestaltung wird mit dem Versicherer verhandelt.",
+        ],
+        [
+            'q' => 'Was passiert bei einer Ablehnung? (Markt/Marktfolge-Eskalation)',
+            'a' => "Bankennahes Zweitvotum-Verfahren nach dem Markt/Marktfolge-Prinzip:\n1. Wird eine Forderung abgelehnt (z. B. Bonität, Regelprüfung), kann der Markt (Operations/Vertrieb) mit Begründung ein Zweitvotum der Marktfolge (Kredit/Risiko) anfordern.\n2. Die Marktfolge prüft manuell und gibt frei ODER lehnt ab — dann eskaliert der Fall automatisch an den Vorstand.\n3. Der Vorstand entscheidet als letzte Instanz (freigeben oder endgültig ablehnen). Jede Stufe erfordert eine Begründung und wird revisionssicher auditiert.\nDer Aufsichtsrat entscheidet bewusst nicht operativ mit — er ist Überwachungsorgan und erhält Eskalationen aggregiert im Reporting. Auch nach einer Freigabe im Zweitvotum gilt beim Ankauf weiterhin das Vier-Augen-Prinzip.",
+        ],
+        [
+            'q' => 'Wann kann ein Investor vorzeitig kündigen?',
+            'a' => "Fazilitäten können ordentlich (zum Laufzeitende bzw. mit vereinbarter Frist), per Sonderkündigungsrecht (nur wenn vertraglich vereinbart und im System hinterlegt) oder wegen Insolvenz des Investors beendet werden.\nDie Kündigung wird unter Investoren & Fazilitäten mit Grund erfasst; Frist und Ereignis werden protokolliert. Die Rückführung des gezogenen Kapitals ist ein Treasury-Vorgang und über das Ereignisprotokoll nachvollziehbar.",
+        ],
+        [
+            'q' => 'Wie erstelle ich ein Support-Ticket und wer beantwortet es?',
+            'a' => "Menü Support → Neues Ticket erstellen (Betreff, Kategorie, Beschreibung). Kunden und Investoren sehen ausschließlich ihre eigenen Tickets.\nInterne Bearbeiter antworten, können interne Notizen hinterlegen (für den Ersteller unsichtbar) und den Status pflegen: offen → in Bearbeitung → beantwortet → geschlossen.",
+        ],
+        [
+            'q' => 'Wie lege ich Benutzer an und pflege die Personalakte?',
+            'a' => "Administration (oben rechts) → Benutzer (nur Systemadministration/Geschäftsleitung/Superadmin): Name, E-Mail und Rolle wählen; bei Kunden-Rollen zusätzlich die Kundenorganisation.\nDie Zugangsdaten gehen automatisch per E-Mail mit Passwort-Setz-Link an den neuen Nutzer. Interne Rollen, Investoren und Beiräte müssen beim ersten Login die Zwei-Faktor-Authentifizierung einrichten (QR-Code scannen oder Schlüssel manuell eingeben).\nÜber Bearbeiten pflegen Sie die Personalakte: Position, Abteilung, fachlicher und disziplinarischer Vorgesetzter, Kontaktdaten, Adresse, Nachweise (Personalausweis, Führungszeugnis, SCHUFA, Führerschein) sowie Ein- und Austrittsdatum. Konten sind erst ab Eintrittsdatum nutzbar und werden nach dem Austrittsdatum automatisch gesperrt.",
+        ],
+        [
+            'q' => 'Was sehen Beirat/Aufsichtsrat und was nicht?',
+            'a' => "Beirat/Aufsichtsrat erhalten ein eigenes Dashboard mit wirtschaftlichen Kennzahlen und Grafiken (Portfolio, Quoten, Konzentration) sowie freigegebene Board-Dokumente im Datenraum.\nKeinen Zugriff haben sie auf operative Daten: Kundenidentitäten, Debitorenlisten, einzelne Forderungen und interne Prozesse sind serverseitig gesperrt (Medical Data Firewall) — auch bei direktem URL-Aufruf.",
+        ],
+        [
+            'q' => 'Wo finde ich die Chronologie aller Änderungen?',
+            'a' => 'Im Footer auf die Versionsnummer klicken oder Administration (oben rechts) → Changelog: Alle Releases mit Datum, Uhrzeit, Verantwortlichem und Änderungsliste.',
+        ],
+    ],
+];

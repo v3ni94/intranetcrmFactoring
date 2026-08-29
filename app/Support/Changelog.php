@@ -11,6 +11,23 @@ class Changelog
 {
     public const ENTRIES = [
         [
+            'version' => '3.02',
+            'date' => '29.08.2026 18:30',
+            'author' => 'Timo Müller',
+            'changes' => [
+                'Personalakte je Benutzer: Position, Abteilung, fachlicher und disziplinarischer Vorgesetzter, Kontaktdaten privat/geschäftlich, Adresse, Geburtsdatum, Steuer-ID und Ausweisnummer (verschlüsselt gespeichert), Führungszeugnis, SCHUFA, Führerschein, HR-Notizen',
+                'Ein- und Austrittsdatum mit automatischer Kontosteuerung: Login erst ab Eintritt, automatische Sperre nach Austritt',
+                'Benutzer bearbeiten, Rollen tauschen und löschen (Löschung nur ohne Historie, sonst Hinweis auf Deaktivierung zum Erhalt des Audit-Trails); Superadmin-Rolle nur durch Superadmin vergeb- und entziehbar',
+                'Administration als Dropdown oben rechts im Header statt in der Seitennavigation',
+                'Seitennavigation: Gruppen standardmäßig eingeklappt, Auf-/Zuklappen wird je Nutzer im Browser gemerkt',
+                'Vollständige englische Übersetzung aller Oberflächen inkl. FAQ und Onboarding-Leitfaden',
+                'Wissensdatenbank im Hilfebereich: Benutzerhandbuch für alle, Prozessleitfaden, BaFin-Vorbereitung und Datenschutzkonzept für interne Rollen',
+                'Onboarding-Leitfaden zum Durchklicken durch alle Module mit Direktlinks',
+                'Favicon (Aurevia-Monogramm) für Browser-Tab und Startbildschirm',
+                'Footer-Zeile „Schon gewusst?" mit dem Welt- oder Aktionstag des jeweiligen Datums (inkl. beweglicher Feste wie Aschermittwoch und Ostern, zweisprachig)',
+            ],
+        ],
+        [
             'version' => '3.01',
             'date' => '29.08.2026 15:30',
             'author' => 'Timo Müller',

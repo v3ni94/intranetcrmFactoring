@@ -33,19 +33,19 @@ class PaymentController extends Controller
     public function importDemo(Request $request, PaymentMatcher $matcher, BankFileAdapter $bankAdapter)
     {
         $account = BankAccount::where('purpose', 'betrieb')->first() ?? BankAccount::first();
-        abort_unless($account, 422, 'Kein Bankkonto vorhanden.');
+        abort_unless($account, 422, __('Kein Bankkonto vorhanden.'));
 
         $receivables = Receivable::whereIn('status', ['zahlung_angewiesen', 'ausgezahlt'])->inRandomOrder()->limit(3)->get();
 
         if ($receivables->isEmpty()) {
-            return back()->with('status', 'Keine passenden offenen Forderungen für einen Demo-Kontoauszug gefunden.');
+            return back()->with('status', __('Keine passenden offenen Forderungen für einen Demo-Kontoauszug gefunden.'));
         }
 
         $created = $matcher->generateDemoStatement($account->id, $receivables);
         AuditLogger::log('import', BankTransaction::class, null, [], ['count' => count($created)], 'camt.053 Demo-Import');
         $bankAdapter->logStatementImport(count($created));
 
-        return back()->with('status', count($created).' Kontobewegung(en) importiert (camt.053-Demo).');
+        return back()->with('status', __(':count Kontobewegung(en) importiert (camt.053-Demo).', ['count' => count($created)]));
     }
 
     public function match(Request $request, BankTransaction $transaction, JournalService $journal)
@@ -56,14 +56,14 @@ class PaymentController extends Controller
         abort_unless(
             in_array($receivable->status, PaymentMatcher::OPEN_RECEIVABLE_STATUSES, true),
             422,
-            'Zahlungen können nur offenen Forderungen zugeordnet werden.'
+            __('Zahlungen können nur offenen Forderungen zugeordnet werden.')
         );
 
         DB::transaction(function () use ($request, $transaction, $receivable, $journal) {
             // Zeilensperre + erneute Statuspruefung: verhindert Doppelzuordnung
             // derselben Banktransaktion (Doppelklick, parallele Requests).
             $transaction = BankTransaction::whereKey($transaction->id)->lockForUpdate()->firstOrFail();
-            abort_unless($transaction->status === 'offen', 422, 'Diese Banktransaktion ist bereits zugeordnet.');
+            abort_unless($transaction->status === 'offen', 422, __('Diese Banktransaktion ist bereits zugeordnet.'));
 
             // Status anhand der KUMULIERTEN Zahlungen bestimmen, nicht nur der
             // aktuellen Transaktion — sonst wird eine in Raten bezahlte Forderung
@@ -100,12 +100,12 @@ class PaymentController extends Controller
             AuditLogger::log('update', Receivable::class, $receivable->id, [], ['status' => $newStatus], $note);
         });
 
-        return back()->with('status', 'Zahlung zugeordnet und verbucht.');
+        return back()->with('status', __('Zahlung zugeordnet und verbucht.'));
     }
 
     public function settle(Request $request, Receivable $receivable, JournalService $journal)
     {
-        abort_unless($receivable->status === 'bezahlt', 422, 'Abrechnung nur bei vollständig bezahlten Forderungen möglich.');
+        abort_unless($receivable->status === 'bezahlt', 422, __('Abrechnung nur bei vollständig bezahlten Forderungen möglich.'));
         $purchase = $receivable->purchase;
 
         if ($purchase && (float) $purchase->reserve_amount > 0) {
@@ -118,6 +118,6 @@ class PaymentController extends Controller
         $receivable->update(['status' => 'abgerechnet']);
         AuditLogger::log('update', Receivable::class, $receivable->id, [], ['status' => 'abgerechnet'], 'Schlussabrechnung, Reservefreigabe');
 
-        return back()->with('status', 'Forderung abgerechnet, Sicherheitseinbehalt freigegeben.');
+        return back()->with('status', __('Forderung abgerechnet, Sicherheitseinbehalt freigegeben.'));
     }
 }

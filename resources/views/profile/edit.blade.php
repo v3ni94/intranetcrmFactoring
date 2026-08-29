@@ -21,18 +21,18 @@
 
             <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                 <div class="max-w-xl">
-                    <h2 class="text-lg font-medium text-gray-900">Zwei-Faktor-Authentifizierung</h2>
+                    <h2 class="text-lg font-medium text-gray-900">{{ __('Zwei-Faktor-Authentifizierung') }}</h2>
                     <p class="mt-1 text-sm text-gray-600">
                         @if(auth()->user()->hasConfirmedTwoFactor())
-                            Aktiv für Ihr Konto.
+                            {{ __('Aktiv für Ihr Konto.') }}
                         @elseif(auth()->user()->requiresMfa())
-                            Für Ihre Rolle verpflichtend, aber noch nicht eingerichtet.
+                            {{ __('Für Ihre Rolle verpflichtend, aber noch nicht eingerichtet.') }}
                         @else
-                            Für Ihre Rolle nicht vorgeschrieben, kann aber freiwillig aktiviert werden.
+                            {{ __('Für Ihre Rolle nicht vorgeschrieben, kann aber freiwillig aktiviert werden.') }}
                         @endif
                     </p>
                     <a href="{{ route('two-factor.setup') }}" class="mt-3 inline-block text-sm text-white bg-aurevia-navy px-3 py-1.5 rounded-md hover:bg-aurevia-navy/90">
-                        Verwalten
+                        {{ __('Verwalten') }}
                     </a>
                 </div>
             </div>

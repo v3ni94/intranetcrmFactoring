@@ -80,7 +80,7 @@
             </thead>
             <tbody>
             @foreach($users as $user)
-                <tr class="border-t border-aurevia-mist/60 {{ $user->is_active ? '' : 'opacity-50' }}">
+                <tr class="border-t border-aurevia-mist/60 {{ $user->effectiveStatus() === 'aktiv' ? '' : 'opacity-50' }}">
                     <td class="p-3">{{ $user->name }}</td>
                     <td class="p-3">{{ $user->email }}</td>
                     <td class="p-3">{{ $user->primaryRoleLabel() }}</td>
@@ -93,13 +93,25 @@
                         @endif
                     </td>
                     <td class="p-3">
-                        <span class="text-xs px-2 py-0.5 rounded {{ $user->is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800' }}">
-                            {{ $user->is_active ? __('aktiv') : __('deaktiviert') }}
+                        @php $status = $user->effectiveStatus(); @endphp
+                        <span class="text-xs px-2 py-0.5 rounded whitespace-nowrap {{ [
+                            'aktiv' => 'bg-emerald-100 text-emerald-800',
+                            'deaktiviert' => 'bg-red-100 text-red-800',
+                            'wartet_auf_eintritt' => 'bg-amber-100 text-amber-800',
+                            'ausgetreten' => 'bg-aurevia-pearl text-aurevia-label-gray',
+                        ][$status] }}">
+                            {{ [
+                                'aktiv' => __('aktiv'),
+                                'deaktiviert' => __('deaktiviert'),
+                                'wartet_auf_eintritt' => __('wartet auf Eintritt'),
+                                'ausgetreten' => __('ausgetreten'),
+                            ][$status] }}
                         </span>
                     </td>
                     <td class="p-3 text-right whitespace-nowrap">
+                        <a href="{{ route('users.edit', $user) }}" class="text-xs text-aurevia-navy underline hover:no-underline">{{ __('Bearbeiten') }}</a>
                         @if($user->id !== auth()->id())
-                            <form method="POST" action="{{ route('users.toggle-active', $user) }}" class="inline">
+                            <form method="POST" action="{{ route('users.toggle-active', $user) }}" class="inline ml-2">
                                 @csrf
                                 <button class="text-xs text-aurevia-navy underline hover:no-underline"
                                     onclick="return confirm('{{ $user->is_active ? __('Konto wirklich deaktivieren?') : __('Konto reaktivieren?') }}')">

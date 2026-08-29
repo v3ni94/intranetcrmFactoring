@@ -47,7 +47,7 @@ class FacilityController extends Controller
 
         AuditLogger::log('create', Facility::class, $facility->id, [], $facility->toArray());
 
-        return back()->with('status', 'Fazilität angelegt: '.$facility->facility_number);
+        return back()->with('status', __('Fazilität angelegt: :number', ['number' => $facility->facility_number]));
     }
 
     /**
@@ -58,7 +58,7 @@ class FacilityController extends Controller
      */
     public function terminate(Request $request, Facility $facility)
     {
-        abort_unless(in_array($facility->status, ['aktiv', 'ausgesetzt'], true), 422, 'Fazilität ist nicht aktiv.');
+        abort_unless(in_array($facility->status, ['aktiv', 'ausgesetzt'], true), 422, __('Fazilität ist nicht aktiv.'));
 
         $data = $request->validate([
             'termination_reason' => 'required|in:ordentlich,sonderkuendigung,insolvenz_investor',
@@ -67,7 +67,7 @@ class FacilityController extends Controller
 
         if ($data['termination_reason'] === 'sonderkuendigung' && ! $facility->early_termination_right) {
             return back()->withErrors([
-                'termination_reason' => 'Für diese Fazilität ist kein Sonderkündigungsrecht vereinbart.',
+                'termination_reason' => __('Für diese Fazilität ist kein Sonderkündigungsrecht vereinbart.'),
             ]);
         }
 
@@ -90,6 +90,6 @@ class FacilityController extends Controller
             ['status' => 'aktiv'], ['status' => 'gekuendigt', 'reason' => $data['termination_reason']],
             $data['note'] ?? null);
 
-        return back()->with('status', "Fazilität {$facility->facility_number} gekündigt ({$data['termination_reason']}).");
+        return back()->with('status', __('Fazilität :number gekündigt (:reason).', ['number' => $facility->facility_number, 'reason' => $data['termination_reason']]));
     }
 }

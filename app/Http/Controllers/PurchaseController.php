@@ -16,15 +16,15 @@ class PurchaseController extends Controller
 {
     public function calculate(Request $request, Receivable $receivable, PurchaseCalculator $calculator)
     {
-        abort_unless($receivable->status === 'freigegeben', 422, 'Ankauf kann nur für freigegebene Forderungen berechnet werden.');
-        abort_if($receivable->purchase, 422, 'Für diese Forderung liegt bereits eine Ankaufsberechnung vor.');
+        abort_unless($receivable->status === 'freigegeben', 422, __('Ankauf kann nur für freigegebene Forderungen berechnet werden.'));
+        abort_if($receivable->purchase, 422, __('Für diese Forderung liegt bereits eine Ankaufsberechnung vor.'));
 
         $purchase = $calculator->calculate($receivable);
         $purchase->update(['approved_by_first' => $request->user()->id]);
 
         AuditLogger::log('create', Purchase::class, $purchase->id, [], $purchase->toArray());
 
-        return back()->with('status', 'Ankauf berechnet. Zweite Freigabe (Vier-Augen-Prinzip) erforderlich.');
+        return back()->with('status', __('Ankauf berechnet. Zweite Freigabe (Vier-Augen-Prinzip) erforderlich.'));
     }
 
     public function approveSecond(Request $request, Purchase $purchase, JournalService $journal)
@@ -35,8 +35,8 @@ class PurchaseController extends Controller
         DB::transaction(function () use ($request, $purchase, $journal) {
             $purchase = Purchase::whereKey($purchase->id)->lockForUpdate()->firstOrFail();
 
-            abort_unless($purchase->status === 'berechnet', 422, 'Ankauf ist bereits final.');
-            abort_if($purchase->approved_by_first === $request->user()->id, 403, 'Vier-Augen-Prinzip: Zweitfreigabe durch eine andere Person erforderlich.');
+            abort_unless($purchase->status === 'berechnet', 422, __('Ankauf ist bereits final.'));
+            abort_if($purchase->approved_by_first === $request->user()->id, 403, __('Vier-Augen-Prinzip: Zweitfreigabe durch eine andere Person erforderlich.'));
 
             $receivable = $purchase->receivable;
             $contract = $receivable->contract;
@@ -71,6 +71,6 @@ class PurchaseController extends Controller
             AuditLogger::log('approve', Purchase::class, $purchase->id, [], ['status' => 'freigegeben']);
         });
 
-        return back()->with('status', 'Ankauf final freigegeben und verbucht.');
+        return back()->with('status', __('Ankauf final freigegeben und verbucht.'));
     }
 }

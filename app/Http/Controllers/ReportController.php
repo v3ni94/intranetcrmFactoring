@@ -37,12 +37,12 @@ class ReportController extends Controller
         } catch (TransportExceptionInterface $e) {
             report($e);
 
-            return back()->withErrors(['recipient_email' => 'E-Mail-Versand fehlgeschlagen — SMTP-Zugangsdaten in der .env prüfen.']);
+            return back()->withErrors(['recipient_email' => __('E-Mail-Versand fehlgeschlagen — SMTP-Zugangsdaten in der .env prüfen.')]);
         }
 
         AuditLogger::log('export', ReportSubscription::class, null, [], [], 'KPI-Report manuell versendet an '.$data['recipient_email']);
 
-        return back()->with('status', 'KPI-Report versendet an '.$data['recipient_email'].'.');
+        return back()->with('status', __('KPI-Report versendet an :email.', ['email' => $data['recipient_email']]));
     }
 
     /**
@@ -61,14 +61,14 @@ class ReportController extends Controller
             'created_by' => $request->user()->id,
         ]);
 
-        return back()->with('status', 'Automatischer Report eingerichtet ('.$data['frequency'].').');
+        return back()->with('status', __('Automatischer Report eingerichtet (:frequency).', ['frequency' => $data['frequency']]));
     }
 
     public function toggleSubscription(Request $request, ReportSubscription $subscription)
     {
         $subscription->update(['active' => ! $subscription->active]);
 
-        return back()->with('status', $subscription->active ? 'Report aktiviert.' : 'Report pausiert.');
+        return back()->with('status', $subscription->active ? __('Report aktiviert.') : __('Report pausiert.'));
     }
 
     public function exportReceivables(): StreamedResponse

@@ -71,41 +71,41 @@ class OrganizationController extends Controller
             'segment' => $organization->segment, 'customer_type' => $organization->customer_type,
         ], 'Rating/Segment aktualisiert');
 
-        return back()->with('status', "Rating aktualisiert: {$grade} ({$data['rating_points']} Punkte).");
+        return back()->with('status', __('Rating aktualisiert: :grade (:points Punkte).', ['grade' => $grade, 'points' => $data['rating_points']]));
     }
 
     public function runKyc(Request $request, Organization $organization, KycKybAdapter $adapter)
     {
         $adapter->screen($organization, $request->user()->id);
 
-        return back()->with('status', 'KYC/KYB-Prüfung (Sandbox) durchgeführt.');
+        return back()->with('status', __('KYC/KYB-Prüfung (Sandbox) durchgeführt.'));
     }
 
     public function runCreditCheck(Organization $organization, CreditBureauAdapter $adapter)
     {
         $result = $adapter->score($organization);
 
-        return back()->with('status', "Bonitätsauskunft (Sandbox): Score {$result['score']}, Rating {$result['rating']}.");
+        return back()->with('status', __('Bonitätsauskunft (Sandbox): Score :score, Rating :rating.', ['score' => $result['score'], 'rating' => $result['rating']]));
     }
 
     public function runRegisterCheck(Organization $organization, RegisterUboAdapter $adapter)
     {
         $adapter->verify($organization);
 
-        return back()->with('status', 'Registerabgleich (Sandbox) ohne Beanstandung.');
+        return back()->with('status', __('Registerabgleich (Sandbox) ohne Beanstandung.'));
     }
 
     public function runPepScreening(BeneficialOwner $owner, PepSanctionsAdapter $adapter)
     {
         $adapter->screen($owner);
 
-        return back()->with('status', 'PEP-/Sanktionsscreening (Sandbox) durchgeführt.');
+        return back()->with('status', __('PEP-/Sanktionsscreening (Sandbox) durchgeführt.'));
     }
 
     public function signContract(Request $request, Contract $contract, ESignatureAdapter $adapter)
     {
         $adapter->sign($contract, $request->user()->id);
 
-        return back()->with('status', 'Vertrag digital signiert (Demo-Signatur, kein Rechtsverkehr).');
+        return back()->with('status', __('Vertrag digital signiert (Demo-Signatur, kein Rechtsverkehr).'));
     }
 }

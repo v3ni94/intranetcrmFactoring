@@ -38,7 +38,7 @@ class CapTableController extends Controller
         $shareholder = Shareholder::create($data + ['tenant_id' => TenantContext::id()]);
         AuditLogger::log('create', Shareholder::class, $shareholder->id, [], $shareholder->toArray());
 
-        return back()->with('status', 'Gesellschafter angelegt.');
+        return back()->with('status', __('Gesellschafter angelegt.'));
     }
 
     public function storeEquityInstrument(Request $request)
@@ -58,7 +58,7 @@ class CapTableController extends Controller
         ]);
         AuditLogger::log('create', EquityInstrument::class, $instrument->id, [], $instrument->toArray());
 
-        return back()->with('status', 'Beteiligungsinstrument angelegt (Hypothese).');
+        return back()->with('status', __('Beteiligungsinstrument angelegt (Hypothese).'));
     }
 
     public function storeRelatedParty(Request $request)
@@ -72,7 +72,7 @@ class CapTableController extends Controller
         $party = RelatedParty::create($data + ['tenant_id' => TenantContext::id()]);
         AuditLogger::log('create', RelatedParty::class, $party->id, [], $party->toArray());
 
-        return back()->with('status', 'Related Party angelegt.');
+        return back()->with('status', __('Related Party angelegt.'));
     }
 
     public function storeOutsourcing(Request $request)
@@ -88,6 +88,6 @@ class CapTableController extends Controller
         $entry = OutsourcingRegistration::create($data + ['tenant_id' => TenantContext::id()]);
         AuditLogger::log('create', OutsourcingRegistration::class, $entry->id, [], $entry->toArray());
 
-        return back()->with('status', 'Auslagerung registriert.');
+        return back()->with('status', __('Auslagerung registriert.'));
     }
 }

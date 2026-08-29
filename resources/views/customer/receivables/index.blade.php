@@ -1,9 +1,9 @@
 <x-app-layout>
-    <x-slot name="header">Meine Forderungen</x-slot>
+    <x-slot name="header">{{ __('Meine Forderungen') }}</x-slot>
 
     <div class="mb-4">
         <a href="{{ route('customer.receivables.create') }}" class="text-sm text-white bg-aurevia-navy px-3 py-1.5 rounded-md hover:bg-aurevia-navy/90">
-            Neue Forderung einreichen
+            {{ __('Neue Forderung einreichen') }}
         </a>
     </div>
 
@@ -11,8 +11,8 @@
         <table class="w-full text-sm">
             <thead class="bg-aurevia-pearl text-[11px] uppercase text-aurevia-label-gray">
                 <tr>
-                    <th class="text-left p-3">Nummer</th><th class="text-left p-3">Rechnung</th>
-                    <th class="text-right p-3">Betrag</th><th class="text-left p-3">Status</th><th class="text-left p-3">Eingereicht</th>
+                    <th class="text-left p-3">{{ __('Nummer') }}</th><th class="text-left p-3">{{ __('Rechnung') }}</th>
+                    <th class="text-right p-3">{{ __('Betrag') }}</th><th class="text-left p-3">{{ __('Status') }}</th><th class="text-left p-3">{{ __('Eingereicht') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,7 +25,7 @@
                     <td class="p-3">{{ dmy($r->created_at) }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5" class="p-6 text-center text-aurevia-label-gray">Noch keine Forderungen eingereicht.</td></tr>
+                <tr><td colspan="5" class="p-6 text-center text-aurevia-label-gray">{{ __('Noch keine Forderungen eingereicht.') }}</td></tr>
             @endforelse
             </tbody>
         </table>

@@ -41,12 +41,12 @@ class DunningController extends Controller
         abort_unless(
             in_array($receivable->status, ['ueberfaellig', 'teilbezahlt', 'zahlung_angewiesen', 'ausgezahlt', 'streitig'], true),
             422,
-            'Für Forderungen in diesem Status kann kein Fall angelegt werden.'
+            __('Für Forderungen in diesem Status kann kein Fall angelegt werden.')
         );
         abort_if(
             $receivable->dunningCases()->whereIn('status', ['offen', 'in_klaerung'])->exists(),
             422,
-            'Zu dieser Forderung existiert bereits ein offener Fall.'
+            __('Zu dieser Forderung existiert bereits ein offener Fall.')
         );
 
         // Offener Betrag = Rechnungsbetrag abzueglich bereits zugeordneter Zahlungen.
@@ -87,7 +87,7 @@ class DunningController extends Controller
             return $case;
         });
 
-        return back()->with('status', 'Fall angelegt: '.$data['case_type']);
+        return back()->with('status', __('Fall angelegt: :type', ['type' => $data['case_type']]));
     }
 
     public function close(Request $request, DunningCase $case)
@@ -95,7 +95,7 @@ class DunningController extends Controller
         $case->update(['status' => 'geschlossen']);
         AuditLogger::log('update', DunningCase::class, $case->id, [], ['status' => 'geschlossen']);
 
-        return back()->with('status', 'Fall geschlossen.');
+        return back()->with('status', __('Fall geschlossen.'));
     }
 
     public function handOverToCollections(DunningCase $case, CollectionsAdapter $adapter)
@@ -103,6 +103,6 @@ class DunningController extends Controller
         $reference = $adapter->handOver($case);
         AuditLogger::log('update', DunningCase::class, $case->id, [], ['status' => 'inkasso'], 'Übergabe an Inkasso-Partner (Demo)');
 
-        return back()->with('status', "An Inkasso-Partner übergeben (Demo), Referenz {$reference}.");
+        return back()->with('status', __('An Inkasso-Partner übergeben (Demo), Referenz :reference.', ['reference' => $reference]));
     }
 }

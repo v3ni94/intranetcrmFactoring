@@ -44,6 +44,6 @@ class CreditLineController extends Controller
 
         AuditLogger::log('create', CreditLine::class, $line->id, [], $line->toArray(), $data['decision_reason'] ?? null);
 
-        return back()->with('status', 'Kreditlinie angelegt.');
+        return back()->with('status', __('Kreditlinie angelegt.'));
     }
 }

@@ -31,6 +31,12 @@ class User extends Authenticatable
         'customer_org_id',
         'is_demo',
         'is_active',
+        'position', 'department', 'supervisor_id', 'disciplinary_supervisor_id',
+        'phone_business', 'phone_private', 'email_private',
+        'street', 'zip', 'city', 'country', 'birth_date',
+        'tax_id', 'id_card_number', 'id_card_valid_until',
+        'criminal_record_check_at', 'drivers_license_class', 'drivers_license_valid_until',
+        'schufa_check_at', 'hr_notes', 'joined_at', 'left_at',
     ];
 
     /**
@@ -43,6 +49,8 @@ class User extends Authenticatable
         'remember_token',
         'two_factor_secret',
         'two_factor_recovery_codes',
+        'tax_id',
+        'id_card_number',
     ];
 
     /**
@@ -57,6 +65,15 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_demo' => 'boolean',
             'is_active' => 'boolean',
+            'birth_date' => 'date',
+            'tax_id' => 'encrypted',
+            'id_card_number' => 'encrypted',
+            'id_card_valid_until' => 'date',
+            'criminal_record_check_at' => 'date',
+            'drivers_license_valid_until' => 'date',
+            'schufa_check_at' => 'date',
+            'joined_at' => 'date',
+            'left_at' => 'date',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
@@ -85,6 +102,49 @@ class User extends Authenticatable
     public function organization()
     {
         return $this->belongsTo(Organization::class, 'customer_org_id');
+    }
+
+    public function supervisor()
+    {
+        return $this->belongsTo(User::class, 'supervisor_id');
+    }
+
+    public function disciplinarySupervisor()
+    {
+        return $this->belongsTo(User::class, 'disciplinary_supervisor_id');
+    }
+
+    /**
+     * Beschaeftigungsfenster (v3.02): Konten sind erst ab Eintrittsdatum nutzbar
+     * und nach Austrittsdatum automatisch gesperrt — ohne Cron, zur Laufzeit
+     * geprueft (Login und 2FA-Challenge).
+     */
+    public function isWithinEmploymentPeriod(): bool
+    {
+        if ($this->joined_at && $this->joined_at->isFuture()) {
+            return false;
+        }
+        if ($this->left_at && $this->left_at->isPast() && ! $this->left_at->isToday()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /** Effektiver Kontostatus fuer Anzeige und Zugangspruefung. */
+    public function effectiveStatus(): string
+    {
+        if (! $this->is_active) {
+            return 'deaktiviert';
+        }
+        if ($this->joined_at && $this->joined_at->isFuture()) {
+            return 'wartet_auf_eintritt';
+        }
+        if ($this->left_at && $this->left_at->isPast() && ! $this->left_at->isToday()) {
+            return 'ausgetreten';
+        }
+
+        return 'aktiv';
     }
 
     public function primaryRoleLabel(): string

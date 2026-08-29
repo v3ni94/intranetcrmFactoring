@@ -1,8 +1,8 @@
 <x-app-layout>
-    <x-slot name="header">Forderungen</x-slot>
+    <x-slot name="header">{{ __('Forderungen') }}</x-slot>
 
     <div class="flex flex-wrap gap-2 mb-4 text-xs">
-        <a href="{{ route('receivables.index') }}" class="px-2 py-1 rounded {{ !$status ? 'bg-aurevia-navy text-white' : 'bg-white border border-aurevia-mist' }}">Alle</a>
+        <a href="{{ route('receivables.index') }}" class="px-2 py-1 rounded {{ !$status ? 'bg-aurevia-navy text-white' : 'bg-white border border-aurevia-mist' }}">{{ __('Alle') }}</a>
         @foreach(\App\Models\Receivable::STATUS_LABELS as $key => $label)
             <a href="{{ route('receivables.index', ['status' => $key]) }}" class="px-2 py-1 rounded {{ $status === $key ? 'bg-aurevia-navy text-white' : 'bg-white border border-aurevia-mist' }}">
                 {{ $label }} ({{ $statusCounts[$key] ?? 0 }})
@@ -14,8 +14,8 @@
         <table class="w-full text-sm">
             <thead class="bg-aurevia-pearl text-[11px] uppercase text-aurevia-label-gray">
                 <tr>
-                    <th class="text-left p-3">Nummer</th><th class="text-left p-3">Kunde</th>
-                    <th class="text-right p-3">Betrag</th><th class="text-left p-3">Status</th><th class="text-left p-3">Fällig</th><th class="p-3"></th>
+                    <th class="text-left p-3">{{ __('Nummer') }}</th><th class="text-left p-3">{{ __('Kunde') }}</th>
+                    <th class="text-right p-3">{{ __('Betrag') }}</th><th class="text-left p-3">{{ __('Status') }}</th><th class="text-left p-3">{{ __('Fällig') }}</th><th class="p-3"></th>
                 </tr>
             </thead>
             <tbody>
@@ -26,10 +26,10 @@
                     <td class="p-3 text-right">{{ eur($r->invoice_amount) }}</td>
                     <td class="p-3">{{ $r->statusLabel() }}</td>
                     <td class="p-3">{{ dmy($r->due_date) }}</td>
-                    <td class="p-3 text-right"><a href="{{ route('receivables.show', $r) }}" class="text-aurevia-navy hover:underline">Öffnen</a></td>
+                    <td class="p-3 text-right"><a href="{{ route('receivables.show', $r) }}" class="text-aurevia-navy hover:underline">{{ __('Öffnen') }}</a></td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="p-6 text-center text-aurevia-label-gray">Keine Forderungen gefunden.</td></tr>
+                <tr><td colspan="6" class="p-6 text-center text-aurevia-label-gray">{{ __('Keine Forderungen gefunden.') }}</td></tr>
             @endforelse
             </tbody>
         </table>

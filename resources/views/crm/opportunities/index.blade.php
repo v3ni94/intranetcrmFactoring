@@ -1,16 +1,16 @@
 <x-app-layout>
-    <x-slot name="header">Opportunity-Pipeline</x-slot>
+    <x-slot name="header">{{ __('Opportunity-Pipeline') }}</x-slot>
 
     <div class="mb-4">
-        <x-kpi-card class="max-w-xs" label="Offenes Pipeline-Volumen" :value="eur($pipelineVolume)" />
+        <x-kpi-card class="max-w-xs" label="{{ __('Offenes Pipeline-Volumen') }}" :value="eur($pipelineVolume)" />
     </div>
 
     <div class="bg-white rounded-lg border border-aurevia-mist overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-aurevia-pearl text-[11px] uppercase text-aurevia-label-gray">
                 <tr>
-                    <th class="text-left p-3">Name</th><th class="text-right p-3">Volumen</th>
-                    <th class="text-right p-3">W'keit</th><th class="text-left p-3">Stage</th><th class="text-left p-3">Nächste Aktion</th>
+                    <th class="text-left p-3">{{ __('Name') }}</th><th class="text-right p-3">{{ __('Volumen') }}</th>
+                    <th class="text-right p-3">{{ __('W\'keit') }}</th><th class="text-left p-3">{{ __('Stage') }}</th><th class="text-left p-3">{{ __('Nächste Aktion') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,7 +32,7 @@
                     <td class="p-3">{{ $o->next_action }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5" class="p-6 text-center text-aurevia-label-gray">Keine Opportunities vorhanden.</td></tr>
+                <tr><td colspan="5" class="p-6 text-center text-aurevia-label-gray">{{ __('Keine Opportunities vorhanden.') }}</td></tr>
             @endforelse
             </tbody>
         </table>

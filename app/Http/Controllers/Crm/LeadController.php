@@ -37,7 +37,7 @@ class LeadController extends Controller
 
         AuditLogger::log('create', Lead::class, $lead->id, [], $lead->toArray());
 
-        return back()->with('status', 'Lead angelegt: '.$lead->company_name);
+        return back()->with('status', __('Lead angelegt: :name', ['name' => $lead->company_name]));
     }
 
     public function updateStatus(Request $request, Lead $lead)
@@ -48,6 +48,6 @@ class LeadController extends Controller
 
         AuditLogger::log('update', Lead::class, $lead->id, ['status' => $old], ['status' => $lead->status]);
 
-        return back()->with('status', "Lead-Status geändert: {$old} → {$lead->status}");
+        return back()->with('status', __('Lead-Status geändert: :old → :new', ['old' => $old, 'new' => $lead->status]));
     }
 }

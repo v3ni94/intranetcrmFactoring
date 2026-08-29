@@ -51,13 +51,14 @@ class TwoFactorChallengeController extends Controller
         $userId = $request->session()->get('mfa_challenge_user_id');
         $user = $userId ? User::find($userId) : null;
 
-        abort_unless($user, 419, 'Sitzung abgelaufen, bitte erneut anmelden.');
+        abort_unless($user, 419, __('Sitzung abgelaufen, bitte erneut anmelden.'));
 
-        // Zwischen Erstfaktor und Challenge deaktivierte Konten abweisen.
-        if (! $user->is_active) {
+        // Zwischen Erstfaktor und Challenge deaktivierte oder ausserhalb des
+        // Beschaeftigungszeitraums befindliche Konten abweisen.
+        if (! $user->is_active || ! $user->isWithinEmploymentPeriod()) {
             $request->session()->forget(['mfa_challenge_user_id', 'mfa_challenge_remember']);
 
-            return redirect()->route('login')->withErrors(['email' => 'Dieses Konto ist deaktiviert.']);
+            return redirect()->route('login')->withErrors(['email' => __('Dieses Konto ist deaktiviert.')]);
         }
 
         $throttleKey = 'mfa:'.$user->id.'|'.$request->ip();
@@ -67,7 +68,7 @@ class TwoFactorChallengeController extends Controller
             AuditLogger::log('mfa_lockout', User::class, $user->id, [], [], 'Zu viele Fehlversuche bei der Zwei-Faktor-Pruefung');
 
             return redirect()->route('login')
-                ->withErrors(['email' => 'Zu viele Fehlversuche bei der Zwei-Faktor-Prüfung. Bitte melden Sie sich erneut an.']);
+                ->withErrors(['email' => __('Zu viele Fehlversuche bei der Zwei-Faktor-Prüfung. Bitte melden Sie sich erneut an.')]);
         }
 
         $google2fa = new Google2FA;
@@ -105,7 +106,7 @@ class TwoFactorChallengeController extends Controller
             RateLimiter::hit($throttleKey, self::LOCKOUT_SECONDS);
             AuditLogger::log('mfa_failed', User::class, $user->id, [], [], 'Ungueltiger Zwei-Faktor-Code');
 
-            return back()->withErrors(['code' => 'Der eingegebene Code ist ungültig.']);
+            return back()->withErrors(['code' => __('Der eingegebene Code ist ungültig.')]);
         }
 
         RateLimiter::clear($throttleKey);

@@ -48,7 +48,7 @@ class AuthenticatedSessionController extends Controller
         // Middleware EnsureMfaIsConfirmed fuer alle Folgeaufrufe).
         if ($user->requiresMfa() && ! $user->hasConfirmedTwoFactor()) {
             return redirect()->route('two-factor.setup')
-                ->with('status', 'Zwei-Faktor-Authentifizierung ist für Ihre Rolle verpflichtend. Bitte jetzt einrichten.');
+                ->with('status', __('Zwei-Faktor-Authentifizierung ist für Ihre Rolle verpflichtend. Bitte jetzt einrichten.'));
         }
 
         return redirect()->intended(route('dashboard', absolute: false));

@@ -1,13 +1,13 @@
 <x-app-layout>
-    <x-slot name="header">CRM / Vertrieb – Leads</x-slot>
+    <x-slot name="header">{{ __('CRM / Vertrieb – Leads') }}</x-slot>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 bg-white rounded-lg border border-aurevia-mist overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-aurevia-pearl text-[11px] uppercase text-aurevia-label-gray">
                     <tr>
-                        <th class="text-left p-3">Praxis/Firma</th><th class="text-left p-3">Fachrichtung</th>
-                        <th class="text-left p-3">Kontakt</th><th class="text-left p-3">Status</th><th class="p-3"></th>
+                        <th class="text-left p-3">{{ __('Praxis/Firma') }}</th><th class="text-left p-3">{{ __('Fachrichtung') }}</th>
+                        <th class="text-left p-3">{{ __('Kontakt') }}</th><th class="text-left p-3">{{ __('Status') }}</th><th class="p-3"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -29,7 +29,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="p-6 text-center text-aurevia-label-gray">Keine Leads vorhanden.</td></tr>
+                    <tr><td colspan="5" class="p-6 text-center text-aurevia-label-gray">{{ __('Keine Leads vorhanden.') }}</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -37,20 +37,20 @@
         </div>
 
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
-            <h2 class="text-sm font-semibold text-aurevia-navy mb-3">Neuer Lead</h2>
+            <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Neuer Lead') }}</h2>
             <form method="POST" action="{{ route('crm.leads.store') }}" class="space-y-3">
                 @csrf
-                <x-text-input name="company_name" placeholder="Praxis/Firma" class="w-full" required />
-                <x-text-input name="specialty" placeholder="Fachrichtung" class="w-full" />
-                <x-text-input name="contact_name" placeholder="Ansprechpartner" class="w-full" />
-                <x-text-input name="contact_email" type="email" placeholder="E-Mail" class="w-full" />
-                <x-text-input name="source" placeholder="Quelle / Empfehlungsgeber" class="w-full" />
-                <x-primary-button>Lead anlegen</x-primary-button>
+                <x-text-input name="company_name" placeholder="{{ __('Praxis/Firma') }}" class="w-full" required />
+                <x-text-input name="specialty" placeholder="{{ __('Fachrichtung') }}" class="w-full" />
+                <x-text-input name="contact_name" placeholder="{{ __('Ansprechpartner') }}" class="w-full" />
+                <x-text-input name="contact_email" type="email" placeholder="{{ __('E-Mail') }}" class="w-full" />
+                <x-text-input name="source" placeholder="{{ __('Quelle / Empfehlungsgeber') }}" class="w-full" />
+                <x-primary-button>{{ __('Lead anlegen') }}</x-primary-button>
             </form>
         </div>
     </div>
 
     <div class="mt-6">
-        <a href="{{ route('crm.opportunities.index') }}" class="text-sm text-aurevia-navy hover:underline">Zur Opportunity-Pipeline →</a>
+        <a href="{{ route('crm.opportunities.index') }}" class="text-sm text-aurevia-navy hover:underline">{{ __('Zur Opportunity-Pipeline →') }}</a>
     </div>
 </x-app-layout>

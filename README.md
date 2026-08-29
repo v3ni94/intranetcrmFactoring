@@ -74,6 +74,19 @@ beschriebenen Kern-Prototyp:
     In-App-FAQ, Changelog-Seite, Footer „Ein Produkt der Müller Holding AG";
     Dokumentation unter docs/: Benutzerhandbuch, Prozessleitfaden,
     BaFin-Vorbereitungsdokumentation, Datenschutzkonzept
+7k. ✅ v3.01: Zugangsdaten per E-Mail – Willkommens-Mail mit zeitlich
+    begrenztem Passwort-Setz-Link bei Benutzeranlage und Passwort-Reset
+    (kein Klartext-Passwort per Mail), Fallback-Einmalanzeige ohne SMTP
+7l. ✅ v3.02: Personalakte je Benutzer (Position, Abteilung, Vorgesetzte
+    fachlich/disziplinarisch, Kontaktdaten privat/geschäftlich, Adresse,
+    Geburtsdatum, Steuer-ID und Ausweisnummer verschlüsselt, Führungszeugnis,
+    SCHUFA, Führerschein, HR-Notizen), Ein-/Austrittsdatum mit automatischer
+    Kontosteuerung (Login erst ab Eintritt, Sperre nach Austritt), Benutzer
+    bearbeiten/Rollentausch/Löschen mit Historien-Schutz, Administration als
+    Header-Dropdown, Sidebar-Gruppen eingeklappt mit gemerkter Nutzerwahl,
+    vollständige EN-Übersetzung inkl. FAQ, Wissensdatenbank (Handbuch,
+    Prozessleitfaden, BaFin, Datenschutz) und klickbarer Onboarding-Leitfaden,
+    Favicon
 8. ✅ Automatisierte Tests (80 Feature-Tests, u. a. Vier-Augen-Prinzip für
    Ankauf UND Auszahlung, RBAC, Medical-Data-Firewall-Zugriffskontrolle,
    MFA-Erzwingung inkl. Recovery-Codes/Rate-Limit/Replay, Journal-Bilanz,

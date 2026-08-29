@@ -1,10 +1,16 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}" x-data="{ sidebarOpen: window.innerWidth >= 768 }">
+{{-- Sidebar: standardmaessig eingeklappt; die letzte Wahl des Nutzers wird im Browser gemerkt --}}
+<html lang="{{ app()->getLocale() }}"
+      x-data="{ sidebarOpen: window.innerWidth >= 768 && localStorage.getItem('aurevia.nav.open') === '1' }"
+      x-effect="try { localStorage.setItem('aurevia.nav.open', sidebarOpen ? '1' : '0') } catch (e) {}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'Aurevia Intranet' }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}" sizes="16x16 32x32">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>[x-cloak]{display:none!important}</style>
 </head>
@@ -43,18 +49,35 @@
             <nav class="py-3 text-sm pb-8">
                 @auth
                     @foreach(\App\Support\NavigationMenu::forUser(auth()->user()) as $group)
-                        @if($group['heading'])
-                            <div x-show="sidebarOpen" class="px-4 pt-4 pb-1 text-[10px] uppercase tracking-widest text-aurevia-mist/70">{{ __($group['heading']) }}</div>
-                        @else
-                            <div class="pt-1"></div>
-                        @endif
-                        @foreach($group['items'] as $item)
-                            <a href="{{ route($item['route']) }}"
-                               class="flex items-center gap-3 px-4 py-1.5 hover:bg-white/10 {{ request()->routeIs($item['route']) ? 'bg-white/10 border-l-2 border-aurevia-gold' : 'border-l-2 border-transparent' }}">
-                                <span class="w-1.5 h-1.5 rounded-full bg-aurevia-gold flex-shrink-0"></span>
-                                <span x-show="sidebarOpen" class="whitespace-nowrap">{{ __($item['label']) }}</span>
-                            </a>
-                        @endforeach
+                        @php
+                            // Stabiler Schluessel je Gruppe fuer die gemerkte Auf-/Zuklapp-Wahl
+                            $groupKey = 'aurevia.nav.group.'.\Illuminate\Support\Str::slug($group['heading'] ?? 'allgemein');
+                            $groupActive = collect($group['items'])->contains(fn ($item) => request()->routeIs($item['route']));
+                        @endphp
+                        <div x-data="{ open: {{ $group['heading'] ? 'false' : 'true' }} }"
+                             @if($group['heading'])
+                             x-init="try { open = localStorage.getItem('{{ $groupKey }}') === '1' || {{ $groupActive ? 'true' : 'false' }} } catch (e) {}"
+                             @endif>
+                            @if($group['heading'])
+                                {{-- Gruppen sind standardmaessig eingeklappt; die Wahl wird im Browser gemerkt --}}
+                                <button x-show="sidebarOpen"
+                                        @click="open = !open; try { localStorage.setItem('{{ $groupKey }}', open ? '1' : '0') } catch (e) {}"
+                                        class="w-full flex items-center justify-between px-4 pt-4 pb-1 text-[10px] uppercase tracking-widest text-aurevia-mist/70 hover:text-white">
+                                    <span>{{ __($group['heading']) }}</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                            @else
+                                <div class="pt-1"></div>
+                            @endif
+                            @foreach($group['items'] as $item)
+                                <a href="{{ route($item['route']) }}"
+                                   @if($group['heading']) x-show="open || ! sidebarOpen" x-cloak @endif
+                                   class="flex items-center gap-3 px-4 py-1.5 hover:bg-white/10 {{ request()->routeIs($item['route']) ? 'bg-white/10 border-l-2 border-aurevia-gold' : 'border-l-2 border-transparent' }}">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-aurevia-gold flex-shrink-0"></span>
+                                    <span x-show="sidebarOpen" class="whitespace-nowrap">{{ __($item['label']) }}</span>
+                                </a>
+                            @endforeach
+                        </div>
                     @endforeach
                 @endauth
             </nav>
@@ -79,6 +102,27 @@
                         <a href="{{ route('locale.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'text-aurevia-navy underline' : 'text-aurevia-label-gray hover:text-aurevia-navy' }}">EN</a>
                     </div>
                     @auth
+                        {{-- Administration (v3.02): Dropdown oben rechts statt Sidebar-Gruppe --}}
+                        @php $adminItems = \App\Support\NavigationMenu::adminItemsForUser(auth()->user()); @endphp
+                        @if($adminItems !== [])
+                            <div x-data="{ open: false }" class="relative" @click.outside="open = false" @keydown.escape.window="open = false">
+                                <button @click="open = !open"
+                                        class="flex items-center gap-1 text-aurevia-navy hover:text-aurevia-gold font-medium"
+                                        :aria-expanded="open" aria-haspopup="true">
+                                    {{ __('Administration') }}
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition.opacity.duration.100ms
+                                     class="absolute right-0 mt-2 w-52 bg-white border border-aurevia-mist rounded-md shadow-lg py-1 z-50">
+                                    @foreach($adminItems as $item)
+                                        <a href="{{ route($item['route']) }}"
+                                           class="block px-4 py-2 text-sm hover:bg-aurevia-pearl {{ request()->routeIs($item['route']) ? 'text-aurevia-navy font-semibold' : 'text-aurevia-ink' }}">
+                                            {{ __($item['label']) }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                         <span class="text-aurevia-label-gray uppercase tracking-wide text-[11px] hidden md:inline">{{ auth()->user()->primaryRoleLabel() }}</span>
                         <span class="font-medium hidden sm:inline">{{ auth()->user()->name }}</span>
                         <form method="POST" action="{{ route('logout') }}">
@@ -119,6 +163,7 @@
 
             <footer class="text-[11px] text-aurevia-label-gray px-4 md:px-6 py-3 border-t border-aurevia-mist flex flex-wrap items-center justify-between gap-2">
                 <span>{{ __('Aurevia Factoring AG (Arbeitsname) · Projektgesellschaft in Vorbereitung · Registerangaben folgen nach Gründung · Interne Nutzung · Alle Kennzahlen ohne Gewähr, Modellrechnungen sind keine Zusage.') }}</span>
+                <span class="italic text-aurevia-label-gray/80">{{ \App\Support\DayFact::line() }}</span>
                 <span class="whitespace-nowrap">{{ __('Ein Produkt der Müller Holding AG') }} · <a href="{{ route('help.changelog') }}" class="underline hover:text-aurevia-navy">v{{ config('aurevia.version') }}</a></span>
             </footer>
         </div>

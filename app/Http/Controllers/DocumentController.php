@@ -36,7 +36,7 @@ class DocumentController extends Controller
             && empty($data['organization_id']) && empty($data['release_audience'])
             && $data['category'] !== 'board_pack') {
             return back()->withErrors([
-                'visibility' => 'Externe Freigabe erfordert eine Zielbindung: Organisation, Zielgruppe (Investor/Beirat) oder Kategorie Board Pack.',
+                'visibility' => __('Externe Freigabe erfordert eine Zielbindung: Organisation, Zielgruppe (Investor/Beirat) oder Kategorie Board Pack.'),
             ])->withInput();
         }
 
@@ -59,7 +59,7 @@ class DocumentController extends Controller
 
         AuditLogger::log('create', Document::class, $document->id, [], $document->toArray());
 
-        return back()->with('status', 'Dokument abgelegt: '.$document->title);
+        return back()->with('status', __('Dokument abgelegt: :title', ['title' => $document->title]));
     }
 
     public function download(Request $request, Document $document, WatermarkService $watermark)
@@ -67,9 +67,9 @@ class DocumentController extends Controller
         abort_unless(
             Document::visibleTo($request->user())->whereKey($document->id)->exists(),
             403,
-            'Dieses Dokument ist für Ihre Rolle nicht freigegeben.'
+            __('Dieses Dokument ist für Ihre Rolle nicht freigegeben.')
         );
-        abort_if($document->export_locked, 403, 'Sperrvermerk: Export dieses Dokuments ist technisch gesperrt.');
+        abort_if($document->export_locked, 403, __('Sperrvermerk: Export dieses Dokuments ist technisch gesperrt.'));
         abort_unless($document->storage_path && Storage::disk('local')->exists($document->storage_path), 404);
 
         AuditLogger::log('export', Document::class, $document->id, [], [], 'Download durch '.$request->user()->name);

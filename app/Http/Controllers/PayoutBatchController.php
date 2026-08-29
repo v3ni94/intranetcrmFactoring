@@ -34,7 +34,7 @@ class PayoutBatchController extends Controller
         ]);
 
         $purchases = Purchase::whereIn('id', $data['purchase_ids'])->where('status', 'freigegeben')->whereDoesntHave('payout')->get();
-        abort_if($purchases->isEmpty(), 422, 'Keine gültigen Ankäufe für Auszahlung ausgewählt.');
+        abort_if($purchases->isEmpty(), 422, __('Keine gültigen Ankäufe für Auszahlung ausgewählt.'));
 
         $batch = PayoutBatch::create([
             'tenant_id' => TenantContext::id(),
@@ -60,16 +60,16 @@ class PayoutBatchController extends Controller
 
         AuditLogger::log('create', PayoutBatch::class, $batch->id, [], $batch->toArray());
 
-        return redirect()->route('payouts.index')->with('status', "Auszahlungsbatch {$batch->batch_number} erstellt. Erste Freigabe erforderlich.");
+        return redirect()->route('payouts.index')->with('status', __('Auszahlungsbatch :batch erstellt. Erste Freigabe erforderlich.', ['batch' => $batch->batch_number]));
     }
 
     public function approveFirst(Request $request, PayoutBatch $batch)
     {
-        abort_unless($batch->status === 'erstellt', 422, 'Batch ist bereits in Freigabe oder abgeschlossen.');
+        abort_unless($batch->status === 'erstellt', 422, __('Batch ist bereits in Freigabe oder abgeschlossen.'));
         $batch->update(['status' => 'freigegeben_1', 'approved_by_first' => $request->user()->id]);
         AuditLogger::log('approve', PayoutBatch::class, $batch->id, [], ['status' => $batch->status]);
 
-        return back()->with('status', 'Erste Freigabe erteilt.');
+        return back()->with('status', __('Erste Freigabe erteilt.'));
     }
 
     public function approveSecond(Request $request, PayoutBatch $batch, SepaExportService $sepa, BankFileAdapter $bankAdapter)
@@ -78,8 +78,8 @@ class PayoutBatchController extends Controller
             // Zeilensperre + erneute Statuspruefung gegen parallele Doppelfreigabe.
             $batch = PayoutBatch::whereKey($batch->id)->lockForUpdate()->firstOrFail();
 
-            abort_unless($batch->status === 'freigegeben_1', 422, 'Batch benötigt zunächst eine erste Freigabe.');
-            abort_if($batch->approved_by_first === $request->user()->id, 403, 'Vier-Augen-Prinzip: Zweitfreigabe durch eine andere Person erforderlich.');
+            abort_unless($batch->status === 'freigegeben_1', 422, __('Batch benötigt zunächst eine erste Freigabe.'));
+            abort_if($batch->approved_by_first === $request->user()->id, 403, __('Vier-Augen-Prinzip: Zweitfreigabe durch eine andere Person erforderlich.'));
 
             $reference = $sepa->exportPain001($batch);
 
@@ -101,12 +101,12 @@ class PayoutBatchController extends Controller
 
         $bankAdapter->logSepaExport($batch->refresh(), $reference);
 
-        return back()->with('status', "Zweite Freigabe erteilt. SEPA-Demo-Datei erzeugt: {$reference}");
+        return back()->with('status', __('Zweite Freigabe erteilt. SEPA-Demo-Datei erzeugt: :reference', ['reference' => $reference]));
     }
 
     public function confirm(Request $request, PayoutBatch $batch, JournalService $journal)
     {
-        abort_unless($batch->status === 'angewiesen', 422, 'Batch ist noch nicht angewiesen.');
+        abort_unless($batch->status === 'angewiesen', 422, __('Batch ist noch nicht angewiesen.'));
 
         // Transaktional: Zahlungsbestaetigung, Statuswechsel und Journalbuchungen
         // werden nur gemeinsam wirksam. Eager Loading vermeidet N+1 je Payout.
@@ -129,6 +129,6 @@ class PayoutBatchController extends Controller
             AuditLogger::log('update', PayoutBatch::class, $batch->id, [], ['status' => 'bestaetigt'], 'Bankbestätigung (Demo) erhalten');
         });
 
-        return back()->with('status', 'Auszahlung bestätigt (Demo-Banking).');
+        return back()->with('status', __('Auszahlung bestätigt (Demo-Banking).'));
     }
 }

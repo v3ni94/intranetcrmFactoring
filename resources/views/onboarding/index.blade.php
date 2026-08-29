@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">Anträge &amp; Onboarding</x-slot>
+    <x-slot name="header">{{ __('Anträge & Onboarding') }}</x-slot>
 
     <div class="flex gap-4 overflow-x-auto pb-4">
         @foreach($stages as $stage)
