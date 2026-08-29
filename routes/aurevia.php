@@ -24,6 +24,7 @@ use App\Http\Controllers\HelpController;
 use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\PreviewModeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PayoutBatchController;
 use App\Http\Controllers\PurchaseController;
@@ -39,6 +40,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Vorschau-Modus (v3.05): Beenden muss fuer das Vorschau-Konto jeder Rolle
+    // erreichbar sein, der Start bleibt der Administration vorbehalten.
+    Route::post('/vorschau/beenden', [PreviewModeController::class, 'stop'])->name('preview.stop');
+    Route::middleware('role:systemadministration|geschaeftsleitung|superadmin_demo')
+        ->post('/vorschau/{role}', [PreviewModeController::class, 'start'])->name('preview.start');
 
     Route::get('/dashboard/kunde', KundeDashboardController::class)->name('dashboard.kunde');
     Route::get('/dashboard/mitarbeiter', MitarbeiterDashboardController::class)->name('dashboard.mitarbeiter');

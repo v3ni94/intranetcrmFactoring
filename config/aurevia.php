@@ -5,7 +5,7 @@ return [
     // die erste Zahl steigt bei groesseren Umbauten (z.B. v2.10 -> v3.00),
     // die zweite (zweistellig) bei Erweiterungen und Fixes (v3.00 -> v3.01).
     // Chronologie aller Aenderungen: App\Support\Changelog + Seite /hilfe/changelog.
-    'version' => '3.04',
+    'version' => '3.05',
 
     // Steuert den DEMO-Banner und die Demo-Steuerung; produktiv auf false setzen.
     'demo_mode' => env('AUREVIA_DEMO_MODE', true),

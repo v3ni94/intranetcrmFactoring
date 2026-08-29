@@ -155,6 +155,8 @@ class User extends Authenticatable
 
     public function primaryRoleLabel(): string
     {
-        return $this->getRoleNames()->first() ?? 'Ohne Rolle';
+        $role = $this->getRoleNames()->first();
+
+        return $role ? \App\Support\RoleCatalog::label($role) : 'Ohne Rolle';
     }
 }

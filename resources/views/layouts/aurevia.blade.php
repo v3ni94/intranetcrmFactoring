@@ -29,6 +29,16 @@
         {{ __('DEMO – ausschließlich fiktive Testdaten – keine echten Zahlungen') }}
     </div>
     @endif
+    @if(session()->has(\App\Http\Controllers\PreviewModeController::SESSION_KEY))
+    {{-- Vorschau-Modus (v3.05): deutlich sichtbarer Balken mit Rueckweg --}}
+    <div class="bg-aurevia-gold text-aurevia-ink text-xs font-semibold tracking-wide py-1.5 px-4 flex flex-wrap items-center justify-center gap-3 text-center">
+        <span>{{ __('VORSCHAU-MODUS: Sie sehen die Anwendung als :role (Beispieldaten).', ['role' => auth()->user()?->primaryRoleLabel()]) }}</span>
+        <form method="POST" action="{{ route('preview.stop') }}">
+            @csrf
+            <button type="submit" class="underline font-bold hover:text-white">{{ __('Vorschau beenden') }}</button>
+        </form>
+    </div>
+    @endif
 
     <div class="flex min-h-screen relative">
         {{-- Mobiler Hintergrund-Overlay, schliesst die Navigation bei Tipp daneben --}}
@@ -58,7 +68,8 @@
                         @endphp
                         <div x-data="{ open: {{ $group['heading'] ? 'false' : 'true' }} }"
                              @if($group['heading'])
-                             x-init="try { open = localStorage.getItem('{{ $groupKey }}') === '1' || {{ $groupActive ? 'true' : 'false' }} } catch (e) {}"
+                             {{-- Beginnt mit Zuweisung, nicht mit try: Alpine kann x-init sonst nicht auswerten --}}
+                             x-init="open = {{ $groupActive ? 'true' : 'false' }} || (() => { try { return localStorage.getItem('{{ $groupKey }}') === '1' } catch (e) { return false } })()"
                              @endif>
                             @if($group['heading'])
                                 {{-- Gruppen sind standardmaessig eingeklappt; die Wahl wird im Browser gemerkt --}}
@@ -104,6 +115,31 @@
                         <a href="{{ route('locale.switch', 'en') }}" class="{{ app()->getLocale() === 'en' ? 'text-aurevia-navy underline' : 'text-aurevia-label-gray hover:text-aurevia-navy' }}">EN</a>
                     </div>
                     @auth
+                        {{-- Vorschau-Modus (v3.05): Ansicht anderer Rollen mit Beispieldaten --}}
+                        @if(! session()->has(\App\Http\Controllers\PreviewModeController::SESSION_KEY) && auth()->user()->hasAnyRole(['systemadministration', 'geschaeftsleitung', 'superadmin_demo']))
+                            <div x-data="{ open: false }" class="relative" @click.outside="open = false" @keydown.escape.window="open = false">
+                                <button @click="open = !open"
+                                        class="flex items-center gap-1 text-aurevia-navy hover:text-aurevia-gold font-medium"
+                                        :aria-expanded="open" aria-haspopup="true">
+                                    {{ __('Ansicht') }}
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                </button>
+                                <div x-show="open" x-cloak x-transition.opacity.duration.100ms
+                                     class="absolute right-0 mt-2 w-64 bg-white border border-aurevia-mist rounded-md shadow-lg py-1 z-50 max-h-96 overflow-y-auto">
+                                    <div class="px-4 py-2 text-[10px] uppercase tracking-widest text-aurevia-label-gray">{{ __('Anwendung ansehen als …') }}</div>
+                                    @foreach(\App\Support\RoleCatalog::ROLES as $roleSlug => $roleLabel)
+                                        @continue($roleSlug === 'superadmin_demo')
+                                        <form method="POST" action="{{ route('preview.start', $roleSlug) }}">
+                                            @csrf
+                                            <button type="submit" class="w-full text-left px-4 py-2 text-sm text-aurevia-ink hover:bg-aurevia-pearl">
+                                                {{ __($roleLabel) }}
+                                            </button>
+                                        </form>
+                                    @endforeach
+                                    <div class="px-4 py-2 text-[10px] text-aurevia-label-gray border-t border-aurevia-mist">{{ __('Kunden- und Investoransicht benötigen eingespielte Testdaten.') }}</div>
+                                </div>
+                            </div>
+                        @endif
                         {{-- Administration (v3.02): Dropdown oben rechts statt Sidebar-Gruppe --}}
                         @php $adminItems = \App\Support\NavigationMenu::adminItemsForUser(auth()->user()); @endphp
                         @if($adminItems !== [])

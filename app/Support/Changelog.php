@@ -11,6 +11,15 @@ class Changelog
 {
     public const ENTRIES = [
         [
+            'version' => '3.05',
+            'date' => '30.08.2026 01:00',
+            'author' => 'Timo Müller',
+            'changes' => [
+                'Vorschau-Modus: Administration und Geschäftsleitung können die Anwendung über das neue Menü „Ansicht“ im Kopfbereich aus Sicht jeder Rolle betrachten (Kunde, Investor, Beirat, Operations usw.); Kunden- und Investoransicht nutzen die eingespielten Testdaten als Beispieldaten, ein goldener Hinweisbalken zeigt den aktiven Modus und führt zurück',
+                'Fehlerbehebung Seitennavigation: Aufgeklappte Menügruppen (z. B. Vertrieb & Kunden) bleiben jetzt tatsächlich über Seitenwechsel hinweg offen, bis sie selbst wieder geschlossen werden; die gespeicherte Wahl wurde bisher beim Laden nicht wiederhergestellt',
+            ],
+        ],
+        [
             'version' => '3.04',
             'date' => '29.08.2026 23:30',
             'author' => 'Timo Müller',

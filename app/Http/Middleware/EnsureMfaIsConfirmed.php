@@ -18,6 +18,12 @@ class EnsureMfaIsConfirmed
     {
         $user = $request->user();
 
+        // Vorschau-Modus: Der echte Administrator hat seine MFA bereits bestanden;
+        // das temporaere Vorschau-Konto braucht keine eigene Einrichtung.
+        if ($request->session()->has(\App\Http\Controllers\PreviewModeController::SESSION_KEY)) {
+            return $next($request);
+        }
+
         if ($user && $user->requiresMfa() && ! $user->hasConfirmedTwoFactor() && ! $request->routeIs(...self::EXEMPT_ROUTES)) {
             return redirect()->route('two-factor.setup')
                 ->with('status', 'Zwei-Faktor-Authentifizierung ist für Ihre Rolle verpflichtend. Bitte jetzt einrichten.');
