@@ -120,8 +120,10 @@ class DayFact
             return $easterRelative[$diff][$isEn ? 1 : 0];
         }
 
-        // Muttertag: zweiter Sonntag im Mai
-        $mothersDay = Carbon::create($date->year, 5, 1)->next(Carbon::SUNDAY)->addWeek();
+        // Muttertag: zweiter Sonntag im Mai. Start am 30.04., da next() den
+        // Starttag selbst ausschliesst — faellt der 1. Mai auf einen Sonntag,
+        // ist er bereits der erste Sonntag im Mai.
+        $mothersDay = Carbon::create($date->year, 4, 30)->next(Carbon::SUNDAY)->addWeek();
         if ($date->isSameDay($mothersDay)) {
             return $isEn ? 'Mother\'s Day' : 'Muttertag';
         }

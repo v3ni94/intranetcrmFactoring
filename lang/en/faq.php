@@ -58,6 +58,14 @@ return [
             'a' => "The advisory/supervisory board get their own dashboard with economic KPIs and charts (portfolio, ratios, concentration) as well as released board documents in the data room.\nThey have no access to operational data: client identities, debtor lists, individual receivables and internal processes are blocked server-side (medical data firewall) — even on direct URL access.",
         ],
         [
+            'q' => 'How do I generate and sign template contracts?',
+            'a' => "Client contract: client detail page → contract row → Generate template contract (PDF). Investor contract: Investors & Facilities → Generate template contract (PDF).\nThe system builds the contract from the stored terms as a PDF (marked TEMPLATE/DRAFT), files it under Contracts & Documents and releases it to the counterparty.\nSigning: the executive board signs for the company; the bound client or investor login signs for the counterparty (or the executive board records a written consent). Each signature is rendered into the PDF with name and timestamp and recorded in the tamper-evident audit log. Note: simple electronic signature — have it reviewed by a lawyer before legally binding use.",
+        ],
+        [
+            'q' => 'How do I load test data and remove it again?',
+            'a' => "Administration → Demo control (superadmin only): Load test data creates 100 fictitious medical clients with contracts and ratings, three investors with monthly distributions since 2025, receivables across 2025/2026, costs and signed template contracts.\nDeletion: Permanently delete test data removes only records marked as test data; Delete everything additionally removes data you created yourself. Both deletions are final and irreversible and require re-entering your password; users, roles and the tenant are preserved.",
+        ],
+        [
             'q' => 'Where do I find the chronology of all changes?',
             'a' => 'Click the version number in the footer or go to Administration (top right) → Changelog: all releases with date, time, responsible person and list of changes.',
         ],

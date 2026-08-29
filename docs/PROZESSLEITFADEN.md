@@ -1,6 +1,6 @@
 # Prozessleitfaden — Aurevia Factoring-Plattform
 
-Version 3.00 · Stand 29.08.2026 · ENTWURF (Arbeitsgrundlage, nicht beschlossen)
+Version 3.03 · Stand 29.08.2026 · ENTWURF (Arbeitsgrundlage, nicht beschlossen)
 
 Dieser Leitfaden beschreibt die Soll-Prozesse der Plattform mit Rollen,
 Kontrollen und Systemunterstützung. Er orientiert sich an bankenüblichen
@@ -120,5 +120,100 @@ Deckungsbeitrags- und Wirtschaftlichkeitsbetrachtung der Geschäftsleitung.
 - Tägliches AES-256-verschlüsseltes Backup (02:30 Uhr), Aufbewahrung 14 Tage,
   dokumentierter Restore-Prozess (DEPLOYMENT.md).
 - Audit-Kette täglich prüfbar (`aurevia:audit-verify`).
-- Benutzer werden deaktiviert, nie gelöscht (Nachvollziehbarkeit).
+- Benutzer werden vorrangig deaktiviert; eine Löschung ist nur ohne verknüpfte
+  Historie möglich (siehe P12) und bleibt die Ausnahme.
 - Versionierung mit Changelog (Version, Zeitstempel, Verantwortlicher).
+
+## P12 Personalpflege (HR) mit Ein- und Austritt
+
+**Beteiligte**: Systemadministration, Geschäftsleitung; Superadmin-Rollen
+zusätzlich nur durch Superadmin.
+
+1. Konto anlegen: Name, geschäftliche E-Mail, Rolle, ggf. Kundenorganisation;
+   Zugangsdaten gehen als Willkommens-Mail mit Passwort-Setz-Link hinaus.
+2. Personalakte pflegen: Position, Berichtslinien (fachlich/disziplinarisch),
+   Kontaktdaten, Adresse, Geburtsdatum, Steuer-ID und Ausweisnummer
+   (verschlüsselt gespeichert), Nachweise (Führungszeugnis, SCHUFA,
+   Führerschein), Ein- und Austrittsdatum.
+3. **Beschäftigungsfenster**: Das Konto ist erst ab dem Eintrittsdatum nutzbar
+   und wird nach dem Austrittsdatum automatisch für Login und
+   2FA-Freischaltung gesperrt, ohne dass ein gesonderter Vorgang ausgelöst
+   werden muss. Für den fristgerechten Zugriffsentzug bei Austritt bleibt die
+   rechtzeitige Pflege des Austrittsdatums maßgeblich (organisatorische
+   Verantwortung der Personalpflege, nicht allein technische Kontrolle).
+4. Rollentausch: Kundenorganisation wird nur bei Kunden-Rollen weitergeführt;
+   die Superadmin-Rolle darf ausschließlich durch einen bestehenden Superadmin
+   vergeben oder entzogen werden.
+5. Austritt/Beendigung: Austrittsdatum setzen (automatische Sperre) und, wenn
+   keine Historie (Vorgänge, Freigaben, Tickets) entgegensteht, Konto löschen;
+   andernfalls deaktivieren, damit der Audit-Trail erhalten bleibt.
+
+**Kontrollen**: jede Anlage, Änderung, Rollenvergabe und Löschung/Deaktivierung
+wird im Audit-Log protokolliert; Steuer-ID und Ausweisnummer erscheinen in
+keinen Dokumenten oder Exporten.
+
+## P13 Vertragserzeugung und elektronische Signatur
+
+**Beteiligte**: zuständige interne Fachrolle (Erzeugung), Geschäftsleitung/
+Superadmin (Signatur Gesellschaft), Kunde bzw. Investor (Signatur Gegenseite).
+
+1. Mustervertrag erzeugen: aus einem Kundenvertrag bzw. einer Fazilität wird
+   ein Factoring- bzw. Fazilitätsvertrag als PDF direkt aus den hinterlegten
+   Systemdaten (Konditionen, Linien, Laufzeiten) erstellt, deutlich als
+   MUSTER/ENTWURF gekennzeichnet.
+2. Automatische Freigabe: das Dokument wird mit der Erzeugung sofort an die
+   Gegenseite (Kundenorganisation bzw. Investor) freigegeben.
+3. Signatur Gesellschaft: durch Geschäftsleitung oder Superadmin, mit Namen
+   und Zeitstempel.
+4. Signatur Gegenseite: durch den an die Organisation gebundenen externen
+   Nutzer oder, zur Erfassung einer anderweitig schriftlich vorliegenden
+   Zustimmung, durch Geschäftsleitung/Superadmin; ebenfalls mit Namen und
+   Zeitstempel.
+5. Nach jeder Signatur wird der Signaturblock im PDF neu gerendert; sobald
+   beide Seiten unterzeichnet haben, gilt der Vertrag als vollständig
+   signiert.
+
+**Kontrollen**: jede Signatur ist auditiert (Person, Seite, Zeitstempel); eine
+bereits geleistete Signatur kann nicht erneut abgegeben werden. Es handelt
+sich um eine einfache elektronische Signatur im System, keine qualifizierte
+elektronische Signatur; die rechtliche Verwendbarkeit ist vor
+Produktivnutzung mit Rechtsberatung zu klären (siehe BaFin-Dokumentation).
+
+## P14 Testdaten-Lebenszyklus
+
+**Beteiligte**: ausschließlich Superadmin (Demo-Steuerung).
+
+1. Einspielen: ein vollständig fiktiver Vorführ-Datensatz (100 Medizin-Kunden,
+   drei Investoren mit Ausschüttungshistorie seit 2025, Forderungen, Kosten,
+   Abwicklungskonten, signierte Musterverträge) wird auf dem aktuellen
+   Mandanten erzeugt; alle Datensätze sind als Testdaten gekennzeichnet. Nur
+   möglich, solange noch keine Testdaten vorhanden sind.
+2. Betrieb: Testdaten stehen für Vorführungen, Schulungen und
+   Funktionsprüfungen zur Verfügung, ohne echte Geschäftsvorfälle zu
+   berühren.
+3. Löschen der Testdaten: entfernt ausschließlich als Testdaten gekennzeichnete
+   Datensätze, eigene Daten bleiben erhalten; erfordert die erneute Eingabe
+   des Passworts; endgültig und unwiderruflich.
+4. Alles löschen (Sonderfall): entfernt sämtliche Bewegungs- und Stammdaten des
+   Mandanten einschließlich selbst angelegter Daten, Nutzer/Rollen/Mandant
+   bleiben erhalten; erfordert zusätzlich zum Passwort die Bestätigungsphrase
+   „ALLES LÖSCHEN"; endgültig und unwiderruflich.
+
+**Kontrollen**: jeder Einspiel- und Löschvorgang wird protokolliert (Aktion,
+Person, Anzahl Datensätze, Zeitpunkt) und im Audit-Log vermerkt; die
+Trennung über das Kennzeichen `is_demo` ist Voraussetzung für die
+rückstandslose Löschbarkeit.
+
+## P15 Monatliche Zins-Fortschreibung (Fazilitäten)
+
+**Beteiligte**: Scheduler (technisch), Treasury/Finance (Kontrolle).
+
+1. Am 1. eines jeden Monats, 05:30 Uhr, schreibt der Scheduler
+   (`aurevia:accrue-interest`) für jede aktive Fazilität mit gezogenem Kapital
+   die monatliche, nachschüssige Zinsausschüttung für den Vormonat fort,
+   sofern für den Zeitraum noch kein Zinszahlungs-Ereignis besteht
+   (Doppelausführung ausgeschlossen).
+2. Die erzeugten Ereignisse erscheinen im Investor-Reporting und in den
+   Fazilitätenübersichten wie manuell erfasste Zinszahlungen.
+3. Treasury/Finance prüft die fortgeschriebenen Beträge im Rahmen der
+   turnusmäßigen Kontrolle der Investorenbeziehungen.

@@ -19,3 +19,7 @@ Schedule::command('aurevia:mark-overdue')->dailyAt('03:00')->onOneServer();
 // Faellige KPI-Report-Abonnements versenden (taeglich/woechentlich/monatlich,
 // Faelligkeit prueft das Abo selbst). Setzt konfigurierte MAIL_*-Daten voraus.
 Schedule::command('aurevia:send-reports')->dailyAt('06:30')->onOneServer();
+
+// v3.03: Monatliche Zinsausschuettungen je aktiver Fazilitaet fortschreiben
+// (nachschuessig fuer den Vormonat, am 1. des Monats).
+Schedule::command('aurevia:accrue-interest')->monthlyOn(1, '05:30')->onOneServer();

@@ -7,7 +7,7 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-lg border border-aurevia-mist overflow-hidden">
+    <div class="bg-white rounded-lg border border-aurevia-mist overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-aurevia-pearl text-[11px] uppercase text-aurevia-label-gray">
                 <tr>

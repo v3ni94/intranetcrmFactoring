@@ -47,9 +47,22 @@ class InvestorDashboardController extends Controller
             ])->all()
             : [];
 
+        // v3.03: Ausschuettungen (Zinszahlungen) der letzten 12 Monate grafisch
+        $interestEvents = $facilities->flatMap->events->where('event_type', 'zinszahlung');
+        $payoutLabels = [];
+        $payoutValues = [];
+        for ($m = 11; $m >= 0; $m--) {
+            $start = now()->copy()->subMonths($m)->startOfMonth();
+            $end = $start->copy()->endOfMonth();
+            $payoutLabels[] = $start->format('m/y');
+            $payoutValues[] = (float) $interestEvents
+                ->filter(fn ($e) => $e->event_date && $e->event_date->between($start, $end))
+                ->sum('amount');
+        }
+
         return view('dashboards.investor', compact(
             'org', 'facilities', 'totalCommitment', 'totalDrawn', 'accruedInterest',
-            'platformCommitment', 'upsellTiers', 'modelMargin'
+            'platformCommitment', 'upsellTiers', 'modelMargin', 'payoutLabels', 'payoutValues'
         ));
     }
 }

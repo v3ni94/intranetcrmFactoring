@@ -11,6 +11,21 @@ class Changelog
 {
     public const ENTRIES = [
         [
+            'version' => '3.03',
+            'date' => '29.08.2026 21:00',
+            'author' => 'Timo Müller',
+            'changes' => [
+                'Testdaten für Vorführzwecke: 100 fiktive Medizin-Kunden (Ärzte, Zahnärzte, Apotheken, Dentallabore, Tierärzte, Heilberufe, Pflege, MVZ, Kliniken) mit Verträgen, Ratings und Kreditlinien',
+                'Investoren-Testdaten: Müller Holding AG (900.000 EUR), Enns Holding GmbH (1.100.000 EUR) und apoBank-Testdatensatz (29.500.000 EUR) mit monatlichen Ausschüttungen seit 2025 (10 % p. a., monatlich nachschüssig)',
+                'Forderungen, Ankäufe und Zahlungen über 2025/2026 verteilt, damit Auswertungen und Diagramme in allen Rollen gefüllt sind; Betriebskosten je Monat fürs Controlling; separate Abwicklungskonten (Kunden-/Investorengelder)',
+                'Musterverträge (Factoring- und Fazilitätsvertrag) direkt aus den Systemdaten als PDF erzeugbar, mit einfacher elektronischer Signatur beider Seiten und automatischer Freigabe an die Gegenseite',
+                'Testdaten-Verwaltung in der Demo-Steuerung: Einspielen, Testdaten löschen und Alles löschen — Löschvorgänge endgültig, unwiderruflich und nur mit erneuter Passworteingabe',
+                'Monatliche Fortschreibung der Zinsausschüttungen über den Scheduler (aurevia:accrue-interest)',
+                'Mehr Diagramme: Ankaufsvolumen (Aufsichtsrat/Beirat), monatliche Ausschüttungen (Investor), Altersstruktur (Risiko)',
+                'Dokumentsichtbarkeit verfeinert: organisationsgebundene Investor-Dokumente sieht nur der Investor der eigenen Organisation',
+            ],
+        ],
+        [
             'version' => '3.02',
             'date' => '29.08.2026 18:30',
             'author' => 'Timo Müller',

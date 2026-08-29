@@ -10,6 +10,7 @@
 
     <div class="bg-white rounded-lg border border-aurevia-mist p-4">
         <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Meine Fazilitäten') }}</h2>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="text-[11px] uppercase text-aurevia-label-gray">
                 <tr>
@@ -33,6 +34,7 @@
             @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     {{-- Rendite-Einordnung und Anlage-Staffeln (v3.00) --}}
@@ -51,6 +53,7 @@
                 <h2 class="text-sm font-semibold text-aurevia-navy">{{ __('Mögliche weitere Anlage-Staffeln') }}</h2>
                 <span class="text-[10px] uppercase tracking-wide text-aurevia-gold bg-aurevia-navy px-2 py-0.5 rounded">{{ __('Modellrechnung — keine Zusage') }}</span>
             </div>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray">
                     <tr><th class="text-left pb-2">{{ __('Zusätzliche Zusage') }}</th><th class="text-right pb-2">{{ __('Kalkulatorisch mtl. (:percent % Modellmarge)', ['percent' => number_format($modelMargin, 1, ',', '.')]) }}</th></tr>
@@ -64,11 +67,18 @@
                 @endforeach
                 </tbody>
             </table>
+            </div>
             <p class="text-[11px] text-aurevia-label-gray mt-3">
                 {{ __('Reine Modellrechnung auf Basis einer kalkulatorischen Monatsmarge. Keine Prognose, keine Zusage, keine Anlageberatung und kein Angebot. Maßgeblich sind ausschließlich die vertraglichen Vereinbarungen. Bei Interesse sprechen Sie Ihren Ansprechpartner an oder erstellen Sie ein Support-Ticket.') }}
             </p>
         </div>
         @endif
+    </div>
+
+    {{-- v3.03: monatliche Ausschuettungen grafisch --}}
+    <div class="bg-white rounded-lg border border-aurevia-mist p-4 mt-6">
+        <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Ausschüttungen je Monat (12 Monate)') }}</h2>
+        <x-bar-chart chart-id="investor-payouts" :labels="$payoutLabels" :values="$payoutValues" format="eur" />
     </div>
 
     <p class="text-[11px] text-aurevia-label-gray mt-4">

@@ -58,6 +58,14 @@ return [
             'a' => "Beirat/Aufsichtsrat erhalten ein eigenes Dashboard mit wirtschaftlichen Kennzahlen und Grafiken (Portfolio, Quoten, Konzentration) sowie freigegebene Board-Dokumente im Datenraum.\nKeinen Zugriff haben sie auf operative Daten: Kundenidentitäten, Debitorenlisten, einzelne Forderungen und interne Prozesse sind serverseitig gesperrt (Medical Data Firewall) — auch bei direktem URL-Aufruf.",
         ],
         [
+            'q' => 'Wie erzeuge und unterzeichne ich Musterverträge?',
+            'a' => "Kundenvertrag: Kundendetailseite → Vertragszeile → Mustervertrag (PDF) erzeugen. Investorenvertrag: Investoren & Fazilitäten → Mustervertrag (PDF) erzeugen.\nDas System erstellt den Vertrag aus den hinterlegten Konditionen als PDF (gekennzeichnet als MUSTER/ENTWURF), legt ihn unter Verträge & Dokumente ab und gibt ihn für die Gegenseite frei.\nUnterzeichnung: Für die Gesellschaft zeichnet die Geschäftsleitung, für die Gegenseite der gebundene Kunden- bzw. Investorenzugang (oder die Geschäftsleitung erfasst eine schriftlich vorliegende Zustimmung). Jede Signatur wird mit Name und Zeitstempel in das PDF gerendert und revisionssicher protokolliert. Hinweis: einfache elektronische Signatur, vor rechtsverbindlicher Nutzung anwaltlich prüfen lassen.",
+        ],
+        [
+            'q' => 'Wie spiele ich Testdaten ein und lösche sie wieder?',
+            'a' => "Administration → Demo-Steuerung (nur Superadmin): Testdaten einspielen erzeugt 100 fiktive Medizin-Kunden mit Verträgen und Ratings, drei Investoren mit monatlichen Ausschüttungen seit 2025, Forderungen über 2025/2026, Kosten und unterschriebene Musterverträge.\nLöschen: Testdaten endgültig löschen entfernt ausschließlich als Testdaten markierte Datensätze; Alles löschen entfernt zusätzlich selbst angelegte Daten. Beide Löschvorgänge sind endgültig und unwiderruflich und erfordern die erneute Passworteingabe; Nutzer, Rollen und Mandant bleiben erhalten.",
+        ],
+        [
             'q' => 'Wo finde ich die Chronologie aller Änderungen?',
             'a' => 'Im Footer auf die Versionsnummer klicken oder Administration (oben rechts) → Changelog: Alle Releases mit Datum, Uhrzeit, Verantwortlichem und Änderungsliste.',
         ],

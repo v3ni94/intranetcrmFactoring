@@ -39,9 +39,13 @@ class HelpController extends Controller
         $docs = [
             'handbuch' => ['file' => 'BENUTZERHANDBUCH.md', 'title' => 'Benutzerhandbuch', 'internal' => false],
             'prozesse' => ['file' => 'PROZESSLEITFADEN.md', 'title' => 'Prozessleitfaden', 'internal' => true],
+            'prozesshandbuch' => ['file' => 'PROZESSHANDBUCH.md', 'title' => 'Prozesshandbuch (BaFin-orientiert)', 'internal' => true],
             'bafin' => ['file' => 'BAFIN_DOKUMENTATION.md', 'title' => 'BaFin-Vorbereitungsdokumentation', 'internal' => true],
             'datenschutz' => ['file' => 'DATENSCHUTZ_KONZEPT.md', 'title' => 'Datenschutzkonzept', 'internal' => true],
         ];
+
+        // Unbekannter Dokument-Schluessel: 404 statt Undefined-Array-Key-Exception.
+        abort_unless(isset($docs[$doc]), 404);
 
         $meta = $docs[$doc];
 

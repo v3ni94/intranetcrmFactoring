@@ -23,7 +23,7 @@
                 <x-input-label for="invoice_number" value="{{ __('Rechnungsnummer') }}" />
                 <x-text-input id="invoice_number" name="invoice_number" class="mt-1 w-full" :value="old('invoice_number')" required />
             </div>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <x-input-label for="invoice_date" value="{{ __('Rechnungsdatum') }}" />
                     <x-text-input type="date" id="invoice_date" name="invoice_date" class="mt-1 w-full" :value="old('invoice_date')" required />

@@ -72,16 +72,22 @@
 
             <div class="bg-white rounded-lg border border-aurevia-mist p-6">
                 <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Verträge') }}</h2>
+                <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="text-[11px] uppercase text-aurevia-label-gray"><tr><th class="text-left pb-2">{{ __('Nummer') }}</th><th class="text-left pb-2">{{ __('Status') }}</th><th class="text-right pb-2">{{ __('Ankaufslinie') }}</th><th class="p-3"></th></tr></thead>
                     <tbody>
                     @forelse($organization->contracts as $c)
                         <tr class="border-t border-aurevia-mist/60">
                             <td class="py-1.5">{{ $c->contract_number }}</td><td class="py-1.5">{{ $c->status }}</td><td class="py-1.5 text-right">{{ eur($c->purchase_line) }}</td>
-                            <td class="py-1.5 text-right">
-                                <form method="POST" action="{{ route('organizations.sign-contract', $c) }}">
+                            <td class="py-1.5 text-right whitespace-nowrap">
+                                {{-- v3.03: Mustervertrag als PDF erzeugen und zur Signatur bereitstellen --}}
+                                <form method="POST" action="{{ route('contracts.generate', $c) }}" class="inline">
                                     @csrf
-                                    <button class="text-xs text-aurevia-navy hover:underline">{{ __('Digital signieren (Demo)') }}</button>
+                                    <button class="text-xs text-aurevia-navy hover:underline">{{ __('Mustervertrag (PDF) erzeugen') }}</button>
+                                </form>
+                                <form method="POST" action="{{ route('organizations.sign-contract', $c) }}" class="inline ml-2">
+                                    @csrf
+                                    <button class="text-xs text-aurevia-label-gray hover:underline">{{ __('Digital signieren (Demo)') }}</button>
                                 </form>
                             </td>
                         </tr>
@@ -90,10 +96,12 @@
                     @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <div class="bg-white rounded-lg border border-aurevia-mist p-6">
                 <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Kreditlinien') }}</h2>
+                <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="text-[11px] uppercase text-aurevia-label-gray"><tr><th class="text-left pb-2">{{ __('Typ') }}</th><th class="text-right pb-2">{{ __('Limit') }}</th><th class="text-right pb-2">{{ __('Genutzt') }}</th></tr></thead>
                     <tbody>
@@ -104,6 +112,7 @@
                     @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
 

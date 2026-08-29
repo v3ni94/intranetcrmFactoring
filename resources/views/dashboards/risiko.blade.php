@@ -11,6 +11,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Auslastung Kreditlinien (Top 10)') }}</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray">
                     <tr><th class="text-left pb-2">{{ __('Linie') }}</th><th class="text-right pb-2">{{ __('Auslastung') }}</th></tr>
@@ -26,11 +27,15 @@
                 @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Altersstruktur offener Forderungen') }}</h2>
-            <table class="w-full text-sm">
+            {{-- v3.03: Altersstruktur zusaetzlich grafisch --}}
+            <x-bar-chart chart-id="risiko-ageing" :labels="array_map(fn ($b) => $b.' '.__('Tage'), array_keys($ageing))" :values="array_values($ageing)" format="eur" :height="180" />
+            <div class="overflow-x-auto">
+            <table class="w-full text-sm mt-3">
                 @foreach($ageing as $bucket => $amount)
                     <tr class="border-b border-aurevia-mist/60 last:border-0">
                         <td class="py-1.5">{{ $bucket }} {{ __('Tage') }}</td>
@@ -38,6 +43,7 @@
                     </tr>
                 @endforeach
             </table>
+            </div>
 
             <h2 class="text-sm font-semibold text-aurevia-navy mt-6 mb-3">{{ __('Covenant-Warnungen') }}</h2>
             <ul class="text-sm space-y-1">

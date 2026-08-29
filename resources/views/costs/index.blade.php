@@ -10,6 +10,7 @@
         </div>
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Kosten nach Kategorie (laufendes Jahr)') }}</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <tbody>
                 @forelse($byCategory as $row)
@@ -22,6 +23,7 @@
                 @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 

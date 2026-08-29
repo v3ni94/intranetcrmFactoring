@@ -1,6 +1,6 @@
 # BaFin-Vorbereitungsdokumentation — Aurevia Factoring-Plattform
 
-Version 3.00 · Stand 29.08.2026 · **ENTWURF — NICHT BESCHLOSSEN**
+Version 3.03 · Stand 29.08.2026 · **ENTWURF — NICHT BESCHLOSSEN**
 
 **Zweck und rechtlicher Hinweis:** Dieses Dokument bereitet die Unterlagen für
 ein mögliches Erlaubnisverfahren und spätere Prüfungen vor. Es beschreibt den
@@ -63,10 +63,12 @@ Kanzlei und dem Wirtschaftsprüfer zu erarbeiten.
 | Funktionstrennung Markt/Marktfolge | getrennte Rollen (Vertrieb/Operations vs. Kredit/Risiko); Zweitvoten nur durch Marktfolge/Vorstand |
 | Vier-Augen-Prinzip | Ankauf und Auszahlung erfordern zwei verschiedene Personen; technisch erzwungen |
 | Eskalationsordnung | Ablehnung → Marktfolge → Vorstand; Aufsichtsrat nur überwachend/berichtsempfangend |
-| Berechtigungswesen | 14 Rollen, serverseitige Route-Absicherung, Benutzerverwaltung mit Deaktivierung statt Löschung |
+| Berechtigungswesen | 14 Rollen, serverseitige Route-Absicherung, Benutzerverwaltung mit Deaktivierung als Regelfall, Löschung nur ohne verknüpfte Historie |
 | Revisionssicherheit | Append-only-Audit-Log mit SHA-256-Hash-Kette, Integritätsprüfung per Kommando, Manipulation erkennbar |
 | Datenabschottung | „Medical Data Firewall": Kunde/Investor/Beirat erreichen interne Daten auch per direkter URL nicht |
 | Limitwesen | Ankaufs-/Auszahlungslinien, Debitorenlimits, Konzentrationsgrenzen, Klumpenrisiko-Markierung |
+| Beschäftigungsfenster (v3.02) | Nutzerkonto ist erst ab Eintrittsdatum nutzbar und wird nach Austrittsdatum automatisch für Login und 2FA gesperrt (zur Laufzeit geprüft, ohne gesonderten Lauf) |
+| Testdaten-Trennung (v3.03) | Vorführ-Testdaten sind durchgängig über das Kennzeichen `is_demo` von echten Geschäftsvorfällen getrennt; Löschung nur nach erneuter Passworteingabe, vollständige Löschung zusätzlich nur mit Bestätigungsphrase |
 
 ## 5. IT-Sicherheit (Cybersecurity)
 
@@ -106,7 +108,39 @@ unterlegen: Hosting (IONOS), Warenkreditversicherer, Auskunfteien
 DATEV/Steuerberater. Wesentlichkeitsanalysen und Exit-Strategien sind zu
 erstellen.
 
-## 8. Anlagen (in der Plattform bzw. im Repository)
+## 8. Ergänzende Kontrollen (v3.02/v3.03, zu verifizieren)
+
+- **Einfache elektronische Signatur der Musterverträge**: Seit Version 3.03
+  lassen sich Factoring- und Fazilitätsverträge als Muster/Entwurf-PDF aus den
+  Systemdaten erzeugen und im System mit Name und Zeitstempel beidseitig
+  „unterzeichnen" (einfache elektronische Signatur). Nach unserer Einschätzung
+  handelt es sich hierbei ausdrücklich nicht um eine qualifizierte
+  elektronische Signatur; die Eignung dieser Signaturform für den jeweiligen
+  Vertragstyp und die daraus abzuleitenden Beweiswert- und Formanforderungen
+  sind vor Produktivnutzung zwingend durch eine auf Aufsichts- und Zivilrecht
+  spezialisierte Kanzlei zu prüfen. Bis zu dieser Prüfung ist die Funktion als
+  Vorbereitungs- und Vorführfunktion zu betrachten.
+- **Beschäftigungsfenster als IKS-Kontrolle**: Ein- und Austrittsdatum je
+  Benutzerkonto (Personalakte, seit Version 3.02) sperren den Systemzugriff
+  automatisch außerhalb des Beschäftigungszeitraums (Login und
+  2FA-Freischaltung). Dies unterstützt nach unserer Einschätzung die
+  Anforderungen an einen zeitnahen Zugriffsentzug ausgeschiedener Mitarbeiter
+  im internen Kontrollsystem; ob die Kontrolle für den beabsichtigten Zweck
+  ausreicht (insbesondere Zeitpunkt und Vollständigkeit der Pflege des
+  Austrittsdatums als organisatorische Restgröße), ist im Rahmen der
+  IKS-Dokumentation zu verifizieren.
+- **Testdaten-Trennung**: Vorführ-Testdaten (100 fiktive Medizin-Kunden,
+  Investoren-Testdatensätze) sind durchgängig mit dem Kennzeichen `is_demo`
+  markiert und von echten Geschäftsvorfällen getrennt. Das Löschen von
+  Testdaten erfordert die erneute Eingabe des Passworts der ausführenden
+  Person; das vollständige Löschen aller Mandantendaten erfordert zusätzlich
+  die wörtliche Bestätigungsphrase „ALLES LÖSCHEN" und ist endgültig. Nach
+  unserer Einschätzung trägt dies zur Abgrenzung von Test- und
+  Produktivdaten bei; eine abschließende Bewertung setzt die Festlegung
+  voraus, ob und wie Testdaten auf einem produktiv genutzten Mandanten
+  überhaupt zulässig sind (offener Punkt, organisatorisch zu regeln).
+
+## 9. Anlagen (in der Plattform bzw. im Repository)
 
 - Benutzerhandbuch (docs/BENUTZERHANDBUCH.md)
 - Prozessleitfaden (docs/PROZESSLEITFADEN.md)

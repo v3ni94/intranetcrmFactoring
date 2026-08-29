@@ -9,6 +9,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('KYC/KYB-Fälle') }}</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray"><tr><th class="text-left pb-2">{{ __('Kunde') }}</th><th class="text-left pb-2">{{ __('Typ') }}</th><th class="text-left pb-2">{{ __('Ergebnis') }}</th></tr></thead>
                 <tbody>
@@ -19,10 +20,12 @@
                 @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Watchlist (Risikoklasse Hoch)') }}</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray"><tr><th class="text-left pb-2">{{ __('Kunde') }}</th><th class="text-left pb-2">{{ __('Ort') }}</th></tr></thead>
                 <tbody>
@@ -33,6 +36,7 @@
                 @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </x-app-layout>

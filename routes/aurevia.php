@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\CapTableController;
+use App\Http\Controllers\ContractDocumentController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\CreditLineController;
 use App\Http\Controllers\Crm\LeadController;
@@ -66,6 +67,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
         Route::middleware('role:'.implode('|', RoleCatalog::INTERNAL_ROLES))
             ->post('/', [DocumentController::class, 'store'])->name('store');
+        // v3.03: einfache elektronische Signatur (Berechtigung je Seite im Controller)
+        Route::post('/{document}/unterzeichnen', [ContractDocumentController::class, 'sign'])->name('sign');
     });
 
     // Ab hier ausschliesslich interne Rollen. Medical Data Firewall (Abschnitt 16.2):
@@ -155,7 +158,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [FacilityController::class, 'index'])->name('index');
             Route::post('/', [FacilityController::class, 'store'])->name('store');
             Route::post('/{facility}/kuendigen', [FacilityController::class, 'terminate'])->name('terminate');
+            Route::post('/{facility}/vertrag', [ContractDocumentController::class, 'generateInvestor'])->name('generate-contract');
         });
+
+        // Mustervertrag Kunde (v3.03)
+        Route::post('/vertraege/{contract}/erzeugen', [ContractDocumentController::class, 'generateCustomer'])->name('contracts.generate');
 
         // Controlling: Kostenpflege (v3.00)
         Route::middleware('role:controlling|treasury_finance|geschaeftsleitung|superadmin_demo')
@@ -214,7 +221,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/hilfe/onboarding', [HelpController::class, 'onboarding'])->name('help.onboarding');
     // Wissensdatenbank: Handbuecher als lesbare Seiten (BaFin/Datenschutz nur intern)
     Route::get('/hilfe/wissen/{doc}', [HelpController::class, 'knowledge'])
-        ->whereIn('doc', ['handbuch', 'prozesse', 'bafin', 'datenschutz'])
+        ->whereIn('doc', ['handbuch', 'prozesse', 'prozesshandbuch', 'bafin', 'datenschutz'])
         ->name('help.knowledge');
 
     // Support-Tickets (alle authentifizierten Rollen; Externe sehen nur eigene)
@@ -243,5 +250,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [DemoController::class, 'index'])->name('index');
         Route::post('/reset', [DemoController::class, 'reset'])->name('reset');
         Route::post('/delete', [DemoController::class, 'delete'])->name('delete');
+        // v3.03: Testdaten auf dem aktuellen Mandanten (auch Produktivsystem)
+        Route::post('/testdaten/einspielen', [DemoController::class, 'seedShowcase'])->name('showcase-seed');
+        Route::post('/testdaten/loeschen', [DemoController::class, 'purgeShowcase'])->name('showcase-purge');
+        Route::post('/testdaten/alles-loeschen', [DemoController::class, 'purgeAll'])->name('purge-all');
     });
 });

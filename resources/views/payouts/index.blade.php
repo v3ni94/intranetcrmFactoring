@@ -16,6 +16,7 @@
                     @endforeach
                 </select>
             </div>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray">
                     <tr><th class="text-left pb-2"></th><th class="text-left pb-2">{{ __('Kunde') }}</th><th class="text-right pb-2">{{ __('Auszahlung') }}</th></tr>
@@ -30,6 +31,7 @@
                 @endforeach
                 </tbody>
             </table>
+            </div>
             <x-primary-button>{{ __('Batch erstellen') }}</x-primary-button>
         </form>
         @endif

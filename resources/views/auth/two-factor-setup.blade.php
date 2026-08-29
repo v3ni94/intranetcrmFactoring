@@ -30,7 +30,7 @@
         <div class="bg-aurevia-pearl rounded-md p-3 mb-4">
             <p class="text-[11px] uppercase tracking-wide text-aurevia-label-gray mb-1">{{ __('Alternativ: manueller Schlüssel') }}</p>
             <p class="font-mono text-sm break-all">{{ $secret }}</p>
-            <p class="text-[11px] text-aurevia-label-gray mt-2">otpauth-URI (für Apps mit Import-Funktion): <span class="break-all">{{ $otpauthUrl }}</span></p>
+            <p class="text-[11px] text-aurevia-label-gray mt-2">{{ __('otpauth-URI (für Apps mit Import-Funktion):') }} <span class="break-all">{{ $otpauthUrl }}</span></p>
         </div>
 
         <form method="POST" action="{{ route('two-factor.confirm') }}" class="space-y-3">

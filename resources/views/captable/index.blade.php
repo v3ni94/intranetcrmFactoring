@@ -8,6 +8,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Cap-Table-Szenarien') }}</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm mb-4">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray"><tr><th class="text-left pb-2">{{ __('Gesellschafter') }}</th><th class="text-left pb-2">{{ __('Instrument') }}</th><th class="text-left pb-2">{{ __('Szenario') }}</th><th class="text-right pb-2">{{ __('Anteil') }}</th></tr></thead>
                 <tbody>
@@ -27,8 +28,9 @@
                 @endforelse
                 </tbody>
             </table>
+            </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <form method="POST" action="{{ route('captable.shareholders.store') }}" class="space-y-2 border-t border-aurevia-mist/60 pt-3">
                     @csrf
                     <p class="text-[11px] uppercase text-aurevia-label-gray">{{ __('Neuer Gesellschafter') }}</p>
@@ -64,6 +66,7 @@
 
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Related-Party-Register') }}</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm mb-4">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray"><tr><th class="text-left pb-2">{{ __('Name') }}</th><th class="text-left pb-2">{{ __('Beziehung') }}</th><th class="text-left pb-2">{{ __('Status') }}</th></tr></thead>
                 <tbody>
@@ -74,6 +77,7 @@
                 @endforelse
                 </tbody>
             </table>
+            </div>
             <form method="POST" action="{{ route('captable.related-parties.store') }}" class="space-y-2 border-t border-aurevia-mist/60 pt-3">
                 @csrf
                 <p class="text-[11px] uppercase text-aurevia-label-gray">{{ __('Neuer Eintrag') }}</p>
@@ -92,6 +96,7 @@
 
     <div class="bg-white rounded-lg border border-aurevia-mist p-4">
         <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Auslagerungs-/Dienstleisterregister (DORA)') }}</h2>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm mb-4">
             <thead class="text-[11px] uppercase text-aurevia-label-gray">
                 <tr><th class="text-left pb-2">{{ __('Leistung') }}</th><th class="text-left pb-2">{{ __('Anbieter') }}</th><th class="text-left pb-2">{{ __('Datenzugriff') }}</th><th class="text-left pb-2">{{ __('Kritikalität') }}</th><th class="text-left pb-2">{{ __('DORA-relevant') }}</th></tr>
@@ -108,6 +113,7 @@
             @endforelse
             </tbody>
         </table>
+        </div>
         <form method="POST" action="{{ route('captable.outsourcing.store') }}" class="grid grid-cols-2 md:grid-cols-5 gap-2 border-t border-aurevia-mist/60 pt-3">
             @csrf
             <x-text-input name="service" placeholder="{{ __('Leistung') }}" class="w-full text-sm" required />

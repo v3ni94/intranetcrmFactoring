@@ -13,6 +13,7 @@
 
     <div class="bg-white rounded-lg border border-aurevia-mist p-4 mb-6">
         <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Investorenlinien') }}</h2>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="text-[11px] uppercase text-aurevia-label-gray">
                 <tr><th class="text-left pb-2">{{ __('Fazilität') }}</th><th class="text-left pb-2">{{ __('Investor') }}</th><th class="text-right pb-2">{{ __('Zusage') }}</th><th class="text-right pb-2">{{ __('Gezogen') }}</th></tr>
@@ -30,6 +31,13 @@
             @endforelse
             </tbody>
         </table>
+        </div>
+    </div>
+
+    {{-- v3.03: wirtschaftliche Entwicklung grafisch --}}
+    <div class="bg-white rounded-lg border border-aurevia-mist p-4 mb-6">
+        <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Ankaufsvolumen je Monat (12 Monate)') }}</h2>
+        <x-bar-chart chart-id="beirat-volume" :labels="$volumeLabels" :values="$volumeValues" format="eur" />
     </div>
 
     <a href="{{ route('governance.index') }}" class="text-sm text-aurevia-navy border border-aurevia-navy px-3 py-1.5 rounded-md hover:bg-aurevia-pearl inline-block">

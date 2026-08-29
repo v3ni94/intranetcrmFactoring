@@ -15,13 +15,22 @@ class Document extends Model
         'tenant_id', 'title', 'category', 'related_type', 'related_id', 'version', 'storage_path',
         'visibility', 'release_purpose', 'release_audience', 'release_expires_at', 'export_locked',
         'owner_id', 'released_by', 'is_demo',
+        'signed_company_name', 'signed_company_at', 'signed_company_by',
+        'signed_counterparty_name', 'signed_counterparty_at', 'signed_counterparty_by',
     ];
 
     protected $casts = [
         'release_expires_at' => 'date',
         'export_locked' => 'boolean',
         'is_demo' => 'boolean',
+        'signed_company_at' => 'datetime',
+        'signed_counterparty_at' => 'datetime',
     ];
+
+    public function isFullySigned(): bool
+    {
+        return $this->signed_company_at !== null && $this->signed_counterparty_at !== null;
+    }
 
     public function related()
     {
@@ -65,10 +74,22 @@ class Document extends Model
 
         $audiences = array_values(array_intersect($roles, ['investor', 'beirat']));
 
-        return $query->where(function (Builder $q) use ($audiences) {
+        return $query->where(function (Builder $q) use ($audiences, $user) {
             $q->where('category', 'board_pack');
             if ($audiences !== []) {
-                $q->orWhereIn('release_audience', $audiences);
+                // Zielgruppen-Dokumente: sind sie an eine Organisation gebunden
+                // (z. B. ein Fazilitaetsvertrag), sieht sie nur der Investor
+                // der eigenen Organisation, nicht alle Investoren.
+                $q->orWhere(function (Builder $qq) use ($audiences, $user) {
+                    $qq->whereIn('release_audience', $audiences)
+                        ->where(function (Builder $qqq) use ($user) {
+                            $qqq->whereNull('related_id')
+                                ->orWhere(function (Builder $q4) use ($user) {
+                                    $q4->where('related_type', Organization::class)
+                                        ->where('related_id', $user->customer_org_id ?? 0);
+                                });
+                        });
+                });
             }
         });
     }

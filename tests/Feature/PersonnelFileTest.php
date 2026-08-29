@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Organization;
 use App\Models\Tenant;
 use App\Models\Ticket;
 use App\Models\User;
@@ -111,6 +112,49 @@ class PersonnelFileTest extends TestCase
         $this->assertTrue($super->fresh()->hasRole('superadmin_demo'));
     }
 
+    public function test_investor_role_binds_to_investor_organization_and_unbinds_on_role_change(): void
+    {
+        $investorOrg = Organization::create([
+            'tenant_id' => $this->tenantId, 'org_type' => 'investor', 'name' => 'Kapitalgeber Test AG',
+        ]);
+        $customerOrg = Organization::create([
+            'tenant_id' => $this->tenantId, 'org_type' => 'customer', 'name' => 'Praxis Bindungstest', 'customer_status' => 'Aktiv',
+        ]);
+        $user = $this->makeUser();
+
+        // Ohne Organisation abgelehnt
+        $this->actingAs($this->admin)->post(route('users.update', $user), [
+            'name' => $user->name, 'email' => $user->email, 'role' => 'investor',
+        ])->assertSessionHasErrors('customer_org_id');
+
+        // Kundenorganisation passt nicht zur Investor-Rolle
+        $this->actingAs($this->admin)->post(route('users.update', $user), [
+            'name' => $user->name, 'email' => $user->email, 'role' => 'investor',
+            'customer_org_id' => $customerOrg->id,
+        ])->assertSessionHasErrors('customer_org_id');
+
+        // Mit Investor-Organisation gebunden
+        $this->actingAs($this->admin)->post(route('users.update', $user), [
+            'name' => $user->name, 'email' => $user->email, 'role' => 'investor',
+            'customer_org_id' => $investorOrg->id,
+        ])->assertRedirect();
+        $user->refresh();
+        $this->assertTrue($user->hasRole('investor'));
+        $this->assertSame($investorOrg->id, $user->customer_org_id);
+
+        // Rollenwechsel weg von organisationsgebundenen Rollen loest die Bindung
+        $this->actingAs($this->admin)->post(route('users.update', $user), [
+            'name' => $user->name, 'email' => $user->email, 'role' => 'operations',
+        ])->assertRedirect();
+        $this->assertNull($user->fresh()->customer_org_id);
+
+        // Umgekehrt: Kundenrolle akzeptiert keine Investor-Organisation
+        $this->actingAs($this->admin)->post(route('users.update', $user), [
+            'name' => $user->name, 'email' => $user->email, 'role' => 'kunde_admin',
+            'customer_org_id' => $investorOrg->id,
+        ])->assertSessionHasErrors('customer_org_id');
+    }
+
     public function test_user_without_history_can_be_deleted_but_with_history_cannot(): void
     {
         $fresh = $this->makeUser();
@@ -153,5 +197,17 @@ class PersonnelFileTest extends TestCase
 
         $this->actingAs($this->admin)->get(route('help.knowledge', 'bafin'))->assertOk();
         $this->actingAs($this->admin)->get(route('help.onboarding'))->assertOk();
+    }
+
+    public function test_knowledge_base_renders_process_manual_for_internal_role_only(): void
+    {
+        $customer = User::where('email', 'demo.kunde_admin@aurevia-factoring.de')->firstOrFail();
+
+        $this->actingAs($customer)->get(route('help.knowledge', 'prozesshandbuch'))->assertForbidden();
+
+        $response = $this->actingAs($this->admin)->get(route('help.knowledge', 'prozesshandbuch'));
+        $response->assertOk();
+        $response->assertSee('Vertrieb und Marketing', false);
+        $response->assertSee('Ergänzende Prozesse', false);
     }
 }

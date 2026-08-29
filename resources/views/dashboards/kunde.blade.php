@@ -27,6 +27,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Status-Trichter Ihrer Forderungen') }}</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 @foreach(\App\Models\Receivable::STATUS_LABELS as $key => $label)
                     @if(isset($funnel[$key]))
@@ -38,10 +39,12 @@
                     @endif
                 @endforeach
             </table>
+            </div>
         </div>
 
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Zuletzt eingereicht') }}</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray">
                     <tr><th class="text-left pb-2">{{ __('Nummer') }}</th><th class="text-left pb-2">{{ __('Status') }}</th><th class="text-right pb-2">{{ __('Betrag') }}</th></tr>
@@ -58,6 +61,7 @@
                 @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </x-app-layout>

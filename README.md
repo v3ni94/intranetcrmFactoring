@@ -87,6 +87,13 @@ beschriebenen Kern-Prototyp:
     vollständige EN-Übersetzung inkl. FAQ, Wissensdatenbank (Handbuch,
     Prozessleitfaden, BaFin, Datenschutz) und klickbarer Onboarding-Leitfaden,
     Favicon
+7m. ✅ v3.03: Vorführ-Testdaten (100 fiktive Medizin-Kunden, Investoren
+    Müller Holding AG/Enns Holding GmbH/apoBank-Testdatensatz mit monatlichen
+    Ausschüttungen seit 2025, Kosten, Abwicklungskonten), Musterverträge als
+    PDF mit einfacher elektronischer Signatur beider Seiten, Testdaten-
+    Verwaltung (Einspielen/Löschen/Alles löschen, passwortgeschützt und
+    unwiderruflich), monatliche Zins-Fortschreibung per Scheduler, weitere
+    Dashboard-Diagramme, Footer-Tagesfakt „Schon gewusst?"
 8. ✅ Automatisierte Tests (80 Feature-Tests, u. a. Vier-Augen-Prinzip für
    Ankauf UND Auszahlung, RBAC, Medical-Data-Firewall-Zugriffskontrolle,
    MFA-Erzwingung inkl. Recovery-Codes/Rate-Limit/Replay, Journal-Bilanz,

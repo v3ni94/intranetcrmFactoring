@@ -9,6 +9,7 @@
         <a href="{{ route('help.knowledge', 'handbuch') }}" class="text-xs px-3 py-1.5 rounded-md border border-aurevia-mist bg-white hover:bg-aurevia-pearl">{{ __('Benutzerhandbuch') }}</a>
         @if(auth()->user()->hasAnyRole(\App\Support\RoleCatalog::INTERNAL_ROLES))
             <a href="{{ route('help.knowledge', 'prozesse') }}" class="text-xs px-3 py-1.5 rounded-md border border-aurevia-mist bg-white hover:bg-aurevia-pearl">{{ __('Prozessleitfaden') }}</a>
+            <a href="{{ route('help.knowledge', 'prozesshandbuch') }}" class="text-xs px-3 py-1.5 rounded-md border border-aurevia-mist bg-white hover:bg-aurevia-pearl">{{ __('Prozesshandbuch (BaFin-orientiert)') }}</a>
             <a href="{{ route('help.knowledge', 'bafin') }}" class="text-xs px-3 py-1.5 rounded-md border border-aurevia-mist bg-white hover:bg-aurevia-pearl">{{ __('BaFin-Vorbereitungsdokumentation') }}</a>
             <a href="{{ route('help.knowledge', 'datenschutz') }}" class="text-xs px-3 py-1.5 rounded-md border border-aurevia-mist bg-white hover:bg-aurevia-pearl">{{ __('Datenschutzkonzept') }}</a>
         @endif

@@ -7,6 +7,7 @@
 
     <div class="bg-white rounded-lg border border-aurevia-mist p-4 mb-6">
         <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Workstreams A–J') }}</h2>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="text-[11px] uppercase text-aurevia-label-gray">
                 <tr>
@@ -34,10 +35,12 @@
             @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="bg-white rounded-lg border border-aurevia-mist p-4 mb-6">
         <h2 class="text-sm font-semibold text-aurevia-navy mb-3">Risk Log</h2>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="text-[11px] uppercase text-aurevia-label-gray">
                 <tr>
@@ -62,11 +65,13 @@
             @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">Decision Log</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray"><tr><th class="text-left pb-2">ID</th><th class="text-left pb-2">{{ __('Titel') }}</th><th class="text-left pb-2">{{ __('Status') }}</th></tr></thead>
                 <tbody>
@@ -77,10 +82,12 @@
                 @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         <div class="bg-white rounded-lg border border-aurevia-mist p-4">
             <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Vorschlagsdatensätze Gründungsteam (keine produktiven Rechte)') }}</h2>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="text-[11px] uppercase text-aurevia-label-gray"><tr><th class="text-left pb-2">{{ __('Name') }}</th><th class="text-left pb-2">{{ __('Fokus') }}</th><th class="text-left pb-2">{{ __('Status') }}</th></tr></thead>
                 <tbody>
@@ -89,11 +96,13 @@
                 @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 
     <div class="bg-white rounded-lg border border-aurevia-mist p-4">
         <h2 class="text-sm font-semibold text-aurevia-navy mb-3">{{ __('Finanzszenarien (Hypothese)') }}</h2>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="text-[11px] uppercase text-aurevia-label-gray"><tr><th class="text-left pb-2">{{ __('Szenario') }}</th><th class="text-right pb-2">{{ __('Portfolio Jahr 1') }}</th><th class="text-right pb-2">{{ __('Status') }}</th></tr></thead>
             <tbody>
@@ -102,5 +111,6 @@
             @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 </x-app-layout>

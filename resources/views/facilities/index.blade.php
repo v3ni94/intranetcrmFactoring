@@ -34,6 +34,10 @@
                         </td>
                         <td class="p-3 text-right">
                             @if(in_array($f->status, ['aktiv', 'ausgesetzt']))
+                                <form method="POST" action="{{ route('facilities.generate-contract', $f) }}" class="inline mb-1">
+                                    @csrf
+                                    <button class="text-xs text-aurevia-navy hover:underline">{{ __('Mustervertrag (PDF) erzeugen') }}</button>
+                                </form>
                                 <form method="POST" action="{{ route('facilities.terminate', $f) }}" class="flex items-center gap-1 justify-end"
                                       onsubmit="return confirm('{{ __('Fazilität :number wirklich kündigen?', ['number' => $f->facility_number]) }}')">
                                     @csrf

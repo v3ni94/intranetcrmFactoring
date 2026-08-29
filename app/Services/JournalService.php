@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\JournalEntry;
 use App\Support\TenantContext;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -29,7 +30,7 @@ class JournalService
     /**
      * @param  array<int, array{account:string, debit?:float, credit?:float, organization_id?:int, contract_id?:int}>  $lines
      */
-    public function post(string $eventType, array $lines, ?string $sourceType = null, ?int $sourceId = null, ?int $createdBy = null): JournalEntry
+    public function post(string $eventType, array $lines, ?string $sourceType = null, ?int $sourceId = null, ?int $createdBy = null, ?Carbon $bookingDate = null, bool $isDemo = false): JournalEntry
     {
         $totalDebit = round(array_sum(array_column($lines, 'debit')), 2);
         $totalCredit = round(array_sum(array_column($lines, 'credit')), 2);
@@ -39,12 +40,13 @@ class JournalService
         $entry = JournalEntry::create([
             'tenant_id' => TenantContext::id(),
             'entry_number' => 'JE-'.now()->format('Ymd').'-'.strtoupper(Str::random(6)),
-            'booking_date' => now()->toDateString(),
-            'value_date' => now()->toDateString(),
+            'booking_date' => ($bookingDate ?? now())->toDateString(),
+            'value_date' => ($bookingDate ?? now())->toDateString(),
             'event_type' => $eventType,
             'source_type' => $sourceType,
             'source_id' => $sourceId,
             'created_by' => $createdBy,
+            'is_demo' => $isDemo,
         ]);
 
         foreach ($lines as $line) {

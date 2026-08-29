@@ -55,7 +55,7 @@ use Illuminate\Support\Facades\DB;
 class DemoResetService
 {
     /** Reihenfolge beachtet Fremdschluessel: Kinder vor Eltern. */
-    private const MODELS_IN_DELETE_ORDER = [
+    public const MODELS_IN_DELETE_ORDER = [
         TicketMessage::class, Ticket::class,
         OperatingCost::class, ReportSubscription::class,
         IntegrationEvent::class, IntegrationProvider::class,

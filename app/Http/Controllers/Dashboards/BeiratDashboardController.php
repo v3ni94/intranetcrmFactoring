@@ -25,9 +25,18 @@ class BeiratDashboardController extends Controller
         $covenantWarnings = FacilityEvent::whereIn('covenant_status', ['warnung', 'verletzt'])->count();
         $newBusinessCount = Purchase::where('purchased_at', '>=', now()->subDays(30))->count();
 
+        // v3.03: Ankaufsvolumen der letzten 12 Monate fuer die grafische Sicht
+        $volumeLabels = [];
+        $volumeValues = [];
+        for ($m = 11; $m >= 0; $m--) {
+            $start = now()->copy()->subMonths($m)->startOfMonth();
+            $volumeLabels[] = $start->format('m/y');
+            $volumeValues[] = (float) Purchase::whereBetween('purchased_at', [$start, $start->copy()->endOfMonth()])->sum('nominal_amount');
+        }
+
         return view('dashboards.beirat', compact(
             'outstandingPortfolio', 'grossRevenue', 'contributionMargin', 'overdueRatio', 'top10',
-            'facilities', 'covenantWarnings', 'newBusinessCount'
+            'facilities', 'covenantWarnings', 'newBusinessCount', 'volumeLabels', 'volumeValues'
         ));
     }
 }

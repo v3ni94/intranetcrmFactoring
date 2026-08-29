@@ -10,6 +10,7 @@ use App\Support\RoleCatalog;
 use App\Support\TenantContext;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
@@ -24,7 +25,12 @@ use Illuminate\Validation\Rule;
  */
 class UserAdminController extends Controller
 {
-    private const CUSTOMER_ROLES = ['kunde_admin', 'kunde_sachbearbeitung'];
+    /**
+     * Rollen mit Organisationsbindung: Kundenrollen an eine Kundenorganisation,
+     * Investoren an ihre Investor-Organisation (Investorenportal und
+     * Dokumentsichtbarkeit laufen ueber customer_org_id).
+     */
+    private const ORG_BOUND_ROLES = ['kunde_admin', 'kunde_sachbearbeitung', 'investor'];
 
     public function index()
     {
@@ -36,12 +42,42 @@ class UserAdminController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $investorOrganizations = Organization::where('org_type', 'investor')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return view('users.index', [
             'users' => $users,
             'roles' => RoleCatalog::ROLES,
-            'customerRoles' => self::CUSTOMER_ROLES,
+            'customerRoles' => self::ORG_BOUND_ROLES,
             'organizations' => $organizations,
+            'investorOrganizations' => $investorOrganizations,
         ]);
+    }
+
+    /**
+     * Validierungsregel: Die gebundene Organisation muss zum Rollentyp passen
+     * (kunde_* => Kundenorganisation, investor => Investor-Organisation). Der
+     * Tenant-Scope greift ueber die IdentifyTenant-Middleware, fremde Mandanten
+     * werden dadurch ebenfalls abgewiesen.
+     */
+    private function orgTypeMatchesRole(Request $request): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail) use ($request) {
+            $role = $request->input('role');
+            if ($value === null || $value === '' || ! in_array($role, self::ORG_BOUND_ROLES, true)) {
+                return;
+            }
+
+            $expected = $role === 'investor' ? 'investor' : 'customer';
+            $org = Organization::find($value);
+
+            if (! $org || $org->org_type !== $expected) {
+                $fail($expected === 'investor'
+                    ? __('Für die Rolle Investor muss eine Organisation vom Typ Investor ausgewählt werden.')
+                    : __('Für Kundenrollen muss eine Kundenorganisation ausgewählt werden.'));
+            }
+        };
     }
 
     public function store(Request $request)
@@ -51,8 +87,8 @@ class UserAdminController extends Controller
             'email' => 'required|email:strict|max:255|unique:users,email',
             'role' => ['required', Rule::in(array_keys(RoleCatalog::ROLES))],
             'customer_org_id' => [
-                Rule::requiredIf(in_array($request->input('role'), self::CUSTOMER_ROLES, true)),
-                'nullable', 'exists:organizations,id',
+                Rule::requiredIf(in_array($request->input('role'), self::ORG_BOUND_ROLES, true)),
+                'nullable', 'exists:organizations,id', $this->orgTypeMatchesRole($request),
             ],
         ]);
 
@@ -70,7 +106,7 @@ class UserAdminController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($initialPassword),
-            'customer_org_id' => in_array($data['role'], self::CUSTOMER_ROLES, true) ? $data['customer_org_id'] : null,
+            'customer_org_id' => in_array($data['role'], self::ORG_BOUND_ROLES, true) ? $data['customer_org_id'] : null,
             'is_demo' => false,
             'is_active' => true,
         ]);
@@ -121,13 +157,15 @@ class UserAdminController extends Controller
     {
         $supervisors = User::where('id', '!=', $user->id)->orderBy('name')->get(['id', 'name']);
         $organizations = Organization::where('org_type', 'customer')->orderBy('name')->get(['id', 'name']);
+        $investorOrganizations = Organization::where('org_type', 'investor')->orderBy('name')->get(['id', 'name']);
 
         return view('users.edit', [
             'user' => $user,
             'roles' => RoleCatalog::ROLES,
-            'customerRoles' => self::CUSTOMER_ROLES,
+            'customerRoles' => self::ORG_BOUND_ROLES,
             'supervisors' => $supervisors,
             'organizations' => $organizations,
+            'investorOrganizations' => $investorOrganizations,
         ]);
     }
 
@@ -138,8 +176,8 @@ class UserAdminController extends Controller
             'email' => ['required', 'email:strict', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', Rule::in(array_keys(RoleCatalog::ROLES))],
             'customer_org_id' => [
-                Rule::requiredIf(in_array($request->input('role'), self::CUSTOMER_ROLES, true)),
-                'nullable', 'exists:organizations,id',
+                Rule::requiredIf(in_array($request->input('role'), self::ORG_BOUND_ROLES, true)),
+                'nullable', 'exists:organizations,id', $this->orgTypeMatchesRole($request),
             ],
             'position' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
@@ -177,7 +215,7 @@ class UserAdminController extends Controller
         $old['role'] = $currentRole;
 
         $user->fill($data);
-        $user->customer_org_id = in_array($data['role'], self::CUSTOMER_ROLES, true) ? $data['customer_org_id'] : null;
+        $user->customer_org_id = in_array($data['role'], self::ORG_BOUND_ROLES, true) ? ($data['customer_org_id'] ?? null) : null;
         $user->save();
         $user->syncRoles([$data['role']]);
 
@@ -199,9 +237,13 @@ class UserAdminController extends Controller
         abort_if($user->hasRole('superadmin_demo') && ! $request->user()->hasRole('superadmin_demo'), 403);
 
         try {
-            AuditLogger::log('delete', User::class, $user->id, ['email' => $user->email], [], 'Benutzer gelöscht');
-            $user->syncRoles([]);
-            $user->delete();
+            // Atomar: schlaegt das Loeschen an Fremdschluesseln fehl, duerfen weder
+            // der Audit-Eintrag "geloescht" bestehen bleiben noch die Rollen fehlen.
+            DB::transaction(function () use ($user) {
+                AuditLogger::log('delete', User::class, $user->id, ['email' => $user->email], [], 'Benutzer gelöscht');
+                $user->syncRoles([]);
+                $user->delete();
+            });
         } catch (QueryException $e) {
             return back()->withErrors([
                 'delete' => __('Löschen nicht möglich: Der Benutzer hat Historie (Vorgänge, Freigaben, Tickets). Bitte stattdessen deaktivieren — so bleibt der Audit-Trail erhalten.'),

@@ -46,9 +46,18 @@
             </div>
             <div x-show="['kunde_admin','kunde_sachbearbeitung'].includes(role)" x-cloak>
                 <label class="block text-[11px] uppercase text-aurevia-label-gray mb-1">{{ __('Kundenorganisation') }}</label>
-                <select name="customer_org_id" class="w-full rounded-md border-aurevia-mist text-sm">
+                <select name="customer_org_id" :disabled="!['kunde_admin','kunde_sachbearbeitung'].includes(role)" class="w-full rounded-md border-aurevia-mist text-sm">
                     <option value="">{{ __('bitte wählen') }}</option>
                     @foreach($organizations as $org)
+                        <option value="{{ $org->id }}" @selected(old('customer_org_id') == $org->id)>{{ $org->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div x-show="role === 'investor'" x-cloak>
+                <label class="block text-[11px] uppercase text-aurevia-label-gray mb-1">{{ __('Investoren-Organisation') }}</label>
+                <select name="customer_org_id" :disabled="role !== 'investor'" class="w-full rounded-md border-aurevia-mist text-sm">
+                    <option value="">{{ __('bitte wählen') }}</option>
+                    @foreach($investorOrganizations as $org)
                         <option value="{{ $org->id }}" @selected(old('customer_org_id') == $org->id)>{{ $org->name }}</option>
                     @endforeach
                 </select>
