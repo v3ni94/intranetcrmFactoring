@@ -172,7 +172,7 @@
                         <textarea name="hr_notes" rows="3" class="w-full rounded-md border-aurevia-mist text-sm">{{ old('hr_notes', $user->hr_notes) }}</textarea>
                     </div>
                 </div>
-                <p class="text-[11px] text-aurevia-label-gray">{{ __('Originaldokumente (Scans) gehören in die geschützte Personalakte im Dokumentenmanagement, nicht in dieses Formular.') }}</p>
+                <p class="text-[11px] text-aurevia-label-gray">{{ __('Originaldokumente (Scans) unten im Abschnitt „Nachweis-Dokumente“ hochladen — sie werden geschützt außerhalb des Webverzeichnisses abgelegt.') }}</p>
             </div>
         </div>
 
@@ -181,6 +181,60 @@
             <button class="px-6 py-2 bg-aurevia-navy text-white rounded-md text-sm hover:bg-aurevia-navy/90">{{ __('Speichern') }}</button>
         </div>
     </form>
+
+    {{-- Nachweis-Dokumente der Personalakte (v3.04): geschuetzte Uploads --}}
+    <div class="bg-white rounded-lg border border-aurevia-mist p-4 mt-6 space-y-4 text-sm">
+        <div>
+            <h2 class="text-sm font-semibold text-aurevia-navy">{{ __('Nachweis-Dokumente') }}</h2>
+            <p class="text-[11px] text-aurevia-label-gray mt-0.5">{{ __('Personalausweis, Führerschein, SCHUFA-Auskunft, Führungszeugnis als PDF oder Bild (max. 10 MB). Ablage geschützt außerhalb des Webverzeichnisses; jeder Abruf wird protokolliert.') }}</p>
+        </div>
+
+        @if($user->hrDocuments->isEmpty())
+            <p class="text-xs text-aurevia-label-gray">{{ __('Noch keine Nachweise hochgeladen.') }}</p>
+        @else
+            <ul class="divide-y divide-aurevia-mist border border-aurevia-mist rounded-md">
+                @foreach($user->hrDocuments as $doc)
+                    <li class="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                        <div class="min-w-0">
+                            <div class="font-medium text-aurevia-navy">{{ __($doc->typeLabel()) }}</div>
+                            <div class="text-[11px] text-aurevia-label-gray truncate">
+                                {{ $doc->original_name }} · {{ number_format($doc->size_bytes / 1024, 0, ',', '.') }} KB · {{ $doc->created_at->format('d.m.Y H:i') }}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 flex-shrink-0">
+                            <a href="{{ route('users.documents.download', [$user, $doc]) }}" class="text-aurevia-navy underline text-xs">{{ __('Herunterladen') }}</a>
+                            <form method="POST" action="{{ route('users.documents.destroy', [$user, $doc]) }}"
+                                  onsubmit="return confirm('{{ __('Diesen Nachweis endgültig löschen?') }}')">
+                                @csrf
+                                <button class="text-red-700 underline text-xs">{{ __('Löschen') }}</button>
+                            </form>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+
+        <form method="POST" action="{{ route('users.documents.upload', $user) }}" enctype="multipart/form-data"
+              class="flex flex-wrap items-end gap-3 border-t border-aurevia-mist pt-3">
+            @csrf
+            <div>
+                <label class="block text-[11px] uppercase text-aurevia-label-gray mb-1">{{ __('Nachweisart') }}</label>
+                <select name="doc_type" required class="rounded-md border-aurevia-mist text-sm">
+                    @foreach(\App\Models\HrDocument::TYPES as $value => $label)
+                        <option value="{{ $value }}">{{ __($label) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-[11px] uppercase text-aurevia-label-gray mb-1">{{ __('Datei (PDF, JPG, PNG)') }}</label>
+                <input type="file" name="file" required accept=".pdf,.jpg,.jpeg,.png"
+                       class="text-sm text-aurevia-ink file:mr-3 file:px-3 file:py-1.5 file:rounded-md file:border-0 file:bg-aurevia-navy file:text-white file:text-xs" />
+            </div>
+            <button class="px-4 py-2 bg-aurevia-navy text-white rounded-md text-sm hover:bg-aurevia-navy/90">{{ __('Hochladen') }}</button>
+            @error('file')<p class="text-xs text-red-700 w-full">{{ $message }}</p>@enderror
+            @error('doc_type')<p class="text-xs text-red-700 w-full">{{ $message }}</p>@enderror
+        </form>
+    </div>
 
     {{-- Gefahrenzone --}}
     <div class="bg-white rounded-lg border border-red-200 p-4 mt-6 flex flex-wrap items-center justify-between gap-3">

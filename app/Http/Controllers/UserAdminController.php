@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\WelcomeUserMail;
+use App\Models\HrDocument;
 use App\Models\Organization;
 use App\Models\User;
 use App\Support\AuditLogger;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -236,6 +238,10 @@ class UserAdminController extends Controller
         abort_if($user->id === $request->user()->id, 422, __('Das eigene Konto kann nicht gelöscht werden.'));
         abort_if($user->hasRole('superadmin_demo') && ! $request->user()->hasRole('superadmin_demo'), 403);
 
+        // Pfade der Nachweis-Dateien vor dem Loeschen sichern: die Datenbankzeilen
+        // fallen per Fremdschluessel-Kaskade weg, die Dateien selbst nicht.
+        $hrFilePaths = $user->hrDocuments()->pluck('storage_path')->all();
+
         try {
             // Atomar: schlaegt das Loeschen an Fremdschluesseln fehl, duerfen weder
             // der Audit-Eintrag "geloescht" bestehen bleiben noch die Rollen fehlen.
@@ -244,6 +250,11 @@ class UserAdminController extends Controller
                 $user->syncRoles([]);
                 $user->delete();
             });
+
+            // Erst nach erfolgreicher Loeschung auch die Dateien entfernen.
+            foreach ($hrFilePaths as $path) {
+                Storage::disk('local')->delete($path);
+            }
         } catch (QueryException $e) {
             return back()->withErrors([
                 'delete' => __('Löschen nicht möglich: Der Benutzer hat Historie (Vorgänge, Freigaben, Tickets). Bitte stattdessen deaktivieren — so bleibt der Audit-Trail erhalten.'),
@@ -285,5 +296,69 @@ class UserAdminController extends Controller
         return back()
             ->with('created_user', ['email' => $user->email, 'password' => $initialPassword])
             ->with('status', __('E-Mail-Versand nicht möglich — neues Startpasswort für :email wird einmalig angezeigt.', ['email' => $user->email]));
+    }
+
+    /**
+     * v3.04: Nachweis-Dokument (Personalausweis, Fuehrerschein, SCHUFA,
+     * Fuehrungszeugnis, Sonstiges) zur Personalakte hochladen. Ablage
+     * geschuetzt unter storage/app, Auslieferung nur ueber downloadDocument().
+     */
+    public function uploadDocument(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'doc_type' => ['required', Rule::in(array_keys(HrDocument::TYPES))],
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('hr/'.$user->id, 'local');
+
+        $document = HrDocument::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'doc_type' => $data['doc_type'],
+            'original_name' => $file->getClientOriginalName(),
+            'storage_path' => $path,
+            'mime_type' => $file->getClientMimeType(),
+            'size_bytes' => $file->getSize(),
+            'uploaded_by' => $request->user()->id,
+        ]);
+
+        AuditLogger::log('create', HrDocument::class, $document->id, [], [
+            'user' => $user->email, 'doc_type' => $data['doc_type'], 'name' => $document->original_name,
+        ], 'HR-Nachweis hochgeladen');
+
+        return back()->with('status', __(':type für :name hochgeladen.', [
+            'type' => __(HrDocument::TYPES[$data['doc_type']]), 'name' => $user->name,
+        ]));
+    }
+
+    /** Nachweis-Dokument herunterladen; jeder Abruf wird auditiert. */
+    public function downloadDocument(Request $request, User $user, HrDocument $document)
+    {
+        abort_unless($document->user_id === $user->id, 404);
+        abort_unless(Storage::disk('local')->exists($document->storage_path), 404);
+
+        AuditLogger::log('export', HrDocument::class, $document->id, [], [
+            'user' => $user->email, 'doc_type' => $document->doc_type,
+        ], 'HR-Nachweis heruntergeladen');
+
+        return Storage::disk('local')->download($document->storage_path, $document->original_name);
+    }
+
+    /** Nachweis-Dokument endgueltig loeschen (Datei und Datensatz). */
+    public function destroyDocument(Request $request, User $user, HrDocument $document)
+    {
+        abort_unless($document->user_id === $user->id, 404);
+
+        Storage::disk('local')->delete($document->storage_path);
+
+        AuditLogger::log('delete', HrDocument::class, $document->id, [
+            'user' => $user->email, 'doc_type' => $document->doc_type, 'name' => $document->original_name,
+        ], [], 'HR-Nachweis gelöscht');
+
+        $document->delete();
+
+        return back()->with('status', __('Nachweis gelöscht.'));
     }
 }

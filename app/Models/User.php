@@ -104,6 +104,12 @@ class User extends Authenticatable
         return $this->belongsTo(Organization::class, 'customer_org_id');
     }
 
+    /** Nachweis-Dokumente der Personalakte (v3.04). */
+    public function hrDocuments()
+    {
+        return $this->hasMany(HrDocument::class)->orderBy('doc_type')->orderByDesc('created_at');
+    }
+
     public function supervisor()
     {
         return $this->belongsTo(User::class, 'supervisor_id');

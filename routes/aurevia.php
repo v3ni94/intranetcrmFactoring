@@ -243,6 +243,10 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{user}/loeschen', [UserAdminController::class, 'destroy'])->name('destroy');
             Route::post('/{user}/aktiv', [UserAdminController::class, 'toggleActive'])->name('toggle-active');
             Route::post('/{user}/passwort', [UserAdminController::class, 'resetPassword'])->name('reset-password');
+            // v3.04: Nachweis-Dokumente der Personalakte (Upload, Download, Loeschen)
+            Route::post('/{user}/nachweise', [UserAdminController::class, 'uploadDocument'])->name('documents.upload');
+            Route::get('/{user}/nachweise/{document}', [UserAdminController::class, 'downloadDocument'])->name('documents.download');
+            Route::post('/{user}/nachweise/{document}/loeschen', [UserAdminController::class, 'destroyDocument'])->name('documents.destroy');
         });
 
     // Demo-Steuerung (nur Superadmin)

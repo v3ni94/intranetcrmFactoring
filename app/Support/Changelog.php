@@ -11,6 +11,16 @@ class Changelog
 {
     public const ENTRIES = [
         [
+            'version' => '3.04',
+            'date' => '29.08.2026 23:30',
+            'author' => 'Timo Müller',
+            'changes' => [
+                'Personalakte: Nachweis-Dokumente (Personalausweis, Führerschein, SCHUFA-Auskunft, Führungszeugnis, Sonstiges) können jetzt als PDF oder Bild direkt beim Benutzer hochgeladen, heruntergeladen und gelöscht werden — Ablage geschützt außerhalb des Webverzeichnisses, Zugriff nur für Systemadministration, Geschäftsleitung und Superadmin, jeder Vorgang wird auditiert',
+                'Fehlerbehebung Demo-Steuerung: Die Zählung der Testdatensätze fragte die Kennzeichnungsspalte auch auf Tabellen ohne diese Spalte ab, was auf dem Produktivserver (MariaDB) zu einem Serverfehler führte; die Zählung überspringt diese Tabellen jetzt und zählt das Testdaten-Produkt wie beim Löschen über den Namen mit',
+                'Seitennavigation: Auf Desktop-Breite ist die Menüleiste jetzt standardmäßig aufgeklappt und bleibt beim Seitenwechsel offen; nur der Menü-Button klappt sie zu, die Wahl wird je Browser gemerkt; der Mobil-Zustand überschreibt die Desktop-Einstellung nicht mehr',
+            ],
+        ],
+        [
             'version' => '3.03',
             'date' => '29.08.2026 21:00',
             'author' => 'Timo Müller',

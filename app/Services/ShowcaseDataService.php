@@ -93,8 +93,18 @@ class ShowcaseDataService
 
     public function countTestRecords(Tenant $tenant): int
     {
-        return collect(DemoResetService::MODELS_IN_DELETE_ORDER)
+        // Nur Tabellen mit is_demo-Spalte abfragen: Tabellen ohne diese Spalte
+        // (z. B. journal_lines, ticket_messages) wuerden auf MariaDB einen
+        // SQL-Fehler ausloesen; ihre Zeilen haengen an demo-markierten Eltern.
+        $count = collect(DemoResetService::MODELS_IN_DELETE_ORDER)
+            ->filter(fn (string $model) => Schema::hasColumn((new $model)->getTable(), 'is_demo'))
             ->sum(fn (string $model) => $model::where('tenant_id', $tenant->id)->where('is_demo', true)->count());
+
+        // Das Testdaten-Produkt traegt keine is_demo-Spalte, ist aber am Namen
+        // erkennbar (gleiche Logik wie in purge()), damit Anzeige und
+        // Loeschumfang uebereinstimmen.
+        return $count + FactoringProduct::where('tenant_id', $tenant->id)
+            ->where('name', 'like', '%(Testdaten)%')->count();
     }
 
     public function countAllRecords(Tenant $tenant): int

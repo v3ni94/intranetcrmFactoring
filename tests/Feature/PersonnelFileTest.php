@@ -210,4 +210,68 @@ class PersonnelFileTest extends TestCase
         $response->assertSee('Vertrieb und Marketing', false);
         $response->assertSee('Ergänzende Prozesse', false);
     }
+
+    /** v3.04: Nachweis-Dokumente (Perso, Fuehrerschein, SCHUFA, Fuehrungszeugnis) hochladen, laden, loeschen. */
+    public function test_hr_documents_can_be_uploaded_downloaded_and_deleted(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $employee = $this->makeUser();
+
+        // Upload durch die Administration
+        $file = \Illuminate\Http\Testing\File::fake()->create('perso.pdf', 120, 'application/pdf');
+        $this->actingAs($this->admin)
+            ->post(route('users.documents.upload', $employee), ['doc_type' => 'personalausweis', 'file' => $file])
+            ->assertRedirect();
+
+        $document = \App\Models\HrDocument::where('user_id', $employee->id)->firstOrFail();
+        $this->assertSame('personalausweis', $document->doc_type);
+        $this->assertSame('perso.pdf', $document->original_name);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($document->storage_path);
+
+        // Anzeige auf der Bearbeiten-Seite und Download
+        $this->actingAs($this->admin)->get(route('users.edit', $employee))
+            ->assertOk()->assertSee('perso.pdf');
+        $this->actingAs($this->admin)->get(route('users.documents.download', [$employee, $document]))
+            ->assertOk()->assertDownload('perso.pdf');
+
+        // Unzulaessiger Dateityp wird abgewiesen
+        $bad = \Illuminate\Http\Testing\File::fake()->create('makro.docx', 50, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        $this->actingAs($this->admin)
+            ->post(route('users.documents.upload', $employee), ['doc_type' => 'schufa', 'file' => $bad])
+            ->assertSessionHasErrors('file');
+
+        // Loeschen entfernt Datensatz und Datei
+        $path = $document->storage_path;
+        $this->actingAs($this->admin)
+            ->post(route('users.documents.destroy', [$employee, $document]))
+            ->assertRedirect();
+        $this->assertDatabaseMissing('hr_documents', ['id' => $document->id]);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($path);
+    }
+
+    /** Nachweise sind fuer Rollen ohne Benutzerverwaltungsrecht unerreichbar; kein Fremdzugriff per URL-Raten. */
+    public function test_hr_documents_are_forbidden_for_non_admin_roles(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $employee = $this->makeUser();
+
+        $file = \Illuminate\Http\Testing\File::fake()->create('schufa.pdf', 80, 'application/pdf');
+        $this->actingAs($this->admin)
+            ->post(route('users.documents.upload', $employee), ['doc_type' => 'schufa', 'file' => $file])
+            ->assertRedirect();
+        $document = \App\Models\HrDocument::where('user_id', $employee->id)->firstOrFail();
+
+        // Der Mitarbeiter selbst (Rolle operations, 2FA abgeschlossen) darf
+        // seine eigene Akte nicht abrufen — Rollenpruefung greift serverseitig.
+        $employee->forceFill(['two_factor_secret' => 'test-secret', 'two_factor_confirmed_at' => now()])->save();
+        $this->actingAs($employee)
+            ->get(route('users.documents.download', [$employee, $document]))
+            ->assertForbidden();
+
+        // Dokument haengt am falschen Benutzer-Pfad: 404 statt Auslieferung
+        $other = $this->makeUser();
+        $this->actingAs($this->admin)
+            ->get(route('users.documents.download', [$other, $document]))
+            ->assertNotFound();
+    }
 }

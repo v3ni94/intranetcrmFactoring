@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-{{-- Sidebar: standardmaessig eingeklappt; die letzte Wahl des Nutzers wird im Browser gemerkt --}}
+{{-- Sidebar: auf Desktop-Breite standardmaessig aufgeklappt und bleibt beim Seitenwechsel offen;
+     nur der Menue-Button (drei Striche) klappt sie zu, die Wahl wird im Browser gemerkt.
+     Mobil: geschlossenes Overlay; der Mobil-Zustand ueberschreibt die Desktop-Wahl nicht. --}}
 <html lang="{{ app()->getLocale() }}"
-      x-data="{ sidebarOpen: window.innerWidth >= 768 && localStorage.getItem('aurevia.nav.open') === '1' }"
-      x-effect="try { localStorage.setItem('aurevia.nav.open', sidebarOpen ? '1' : '0') } catch (e) {}">
+      x-data="{ sidebarOpen: (function () { if (window.innerWidth < 768) return false; try { return localStorage.getItem('aurevia.nav.open') !== '0' } catch (e) { return true } })() }"
+      x-effect="if (window.innerWidth >= 768) { try { localStorage.setItem('aurevia.nav.open', sidebarOpen ? '1' : '0') } catch (e) {} }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

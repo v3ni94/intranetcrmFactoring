@@ -157,4 +157,29 @@ class ShowcaseAndContractsTest extends TestCase
         $this->assertSame(0, Organization::count());
         $this->assertGreaterThan(0, User::count());
     }
+
+    /**
+     * Regression v3.03.1: Die Demo-Steuerungsseite selbst muss ohne Serverfehler
+     * laden — vor und nach dem Einspielen. Die Zaehlung der Testdatensaetze darf
+     * die is_demo-Spalte nur auf Tabellen abfragen, die sie besitzen (auf MariaDB
+     * fuehrte die ungefilterte Abfrage zu einem 500er auf der Seite).
+     */
+    public function test_demo_control_page_renders_before_and_after_seeding(): void
+    {
+        $super = User::where('email', 'demo.superadmin@aurevia-factoring.de')->first();
+        if (! $super) {
+            $super = $this->admin;
+            $super->assignRole('superadmin_demo');
+        }
+
+        $this->actingAs($super)->get(route('demo.index'))->assertOk();
+
+        $service = app(ShowcaseDataService::class);
+        $created = $service->seed($this->tenant, $super);
+        $this->assertGreaterThan(500, $created);
+
+        // Nach dem Einspielen zeigt die Seite die Testdaten an und zaehlt sie korrekt
+        $this->actingAs($super)->get(route('demo.index'))->assertOk();
+        $this->assertSame($created, $service->countTestRecords($this->tenant));
+    }
 }
